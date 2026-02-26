@@ -317,6 +317,19 @@ private fun AuthForm(
                     }
                 }
             )
+
+            // Botón de LlaveMX
+            Spacer(modifier = Modifier.height(16.dp))
+            OpenEdXButton(
+                modifier = buttonWidth.testTag("btn_llavemx"),
+                text = stringResource(id = R.string.llavemx_sign_in),
+                textColor = Color.White,
+                backgroundColor = Color(0xFF611232), // Guinda institucional
+                onClick = {
+                    keyboardController?.hide()
+                    onEvent(AuthEvent.LlaveMxSignIn)
+                }
+            )
         }
         if (state.isSocialAuthEnabled) {
             SocialAuthView(

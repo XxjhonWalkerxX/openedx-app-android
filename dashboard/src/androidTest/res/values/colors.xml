@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+    Colores EMI - Dashboard (androidTest)
+    Sincronizado con main para evitar errores de compilación
+    -->
+
+    <!-- Colores institucionales -->
+    <color name="brand_green">#2B6959</color>
+    <color name="brand_cream">#ECE9E4</color>
+    <color name="brand_cream_strong">#DFD4C2</color>
+    <color name="brand_guinda">#611232</color>
+
+    <!-- Uso específico dashboard -->
+    <color name="dashboard_background">@color/brand_cream</color>
+    <color name="dashboard_card_background">@color/brand_cream_strong</color>
+
+    <!-- Alias para compatibilidad con drawables -->
+    <color name="brand_card">@color/brand_cream_strong</color>
+
+</resources>
+

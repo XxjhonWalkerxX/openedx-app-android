@@ -361,7 +361,7 @@ fun CourseDashboard(
                             .padding(paddingValues)
                             .pullRefresh(pullRefreshState),
                         courseImage = courseImage,
-                        imageHeight = 200,
+                        imageHeight = 280,  // EMI: Aumentado de 200 (equivalente iOS: 550pts escalado)
                         expandedTop = {
                             ExpandedHeaderContent(
                                 courseTitle = viewModel.courseName,

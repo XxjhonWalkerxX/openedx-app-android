@@ -2,12 +2,29 @@ package org.openedx.core.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val light_primary = Color(0xFF3C68FF)
+// ==========================================
+// COLORES INSTITUCIONALES EMI
+// (Equivalentes a AccentColor, brandColors en iOS)
+// ==========================================
+val brand_green = Color(0xFF2B6959)        // Verde institucional (Primary/Accent)
+val brand_cream = Color(0xFFECE9E4)        // Crema claro (Fondo general)
+val brand_cream_strong = Color(0xFFDFD4C2) // Crema fuerte (Cards, Headers)
+val brand_guinda = Color(0xFF611232)       // Guinda institucional (Llave MX)
+
+// ==========================================
+// TEMA CLARO - Personalizado EMI
+// Mapeo iOS → Android:
+// - AccentColor → light_primary
+// - backgroundColor → light_background
+// - cardViewBackground → light_card_view_background
+// - primaryHeaderColor → light_course_home_header_shade
+// ==========================================
+val light_primary = brand_green                    // iOS: AccentColor, AccentXColor
 val light_primary_variant = Color(0x9ADEFAFF)
-val light_secondary = Color(0xFF94D3DD)
-val light_secondary_variant = Color(0xFF94D3DD)
-val light_background = Color.White
-val light_surface = Color(0xFFF7F7F8)
+val light_secondary = brand_green                  // iOS: SecondaryButtonTextColor
+val light_secondary_variant = brand_cream_strong
+val light_background = brand_cream                 // iOS: backgroundColor
+val light_surface = brand_cream                    // iOS: surface backgrounds
 val light_error = Color(0xFFE8174F)
 val light_onPrimary = Color.White
 val light_onSecondary = Color.White
@@ -16,67 +33,76 @@ val light_onSurface = Color.Black
 val light_onError = Color.White
 val light_onWarning = Color.White
 val light_onInfo = Color.White
-val light_info_variant = light_primary
-val light_text_primary = Color(0xFF212121)
+val light_info_variant = brand_green               // iOS: InfoColor
+val light_text_primary = brand_green               // iOS: textPrimaryColor → verde
 val light_text_primary_variant = Color(0xFF3D4964)
-val light_text_primary_light = light_text_primary
+val light_text_primary_light = Color(0xFF212121)   // Para texto que necesita ser oscuro
 val light_text_secondary = Color(0xFFB3B3B3)
 val light_text_dark = Color(0xFF19212F)
-val light_text_accent = light_primary
+val light_text_accent = brand_green                // iOS: AccentColor en texto
 val light_text_warning = Color(0xFF19212F)
-val light_text_field_background = Color(0xFFF7F7F8)
+val light_text_field_background = Color.White      // Campos de texto con fondo blanco
 val light_text_field_background_variant = Color.White
 val light_text_field_border = Color(0xFF97A5BB)
 val light_text_field_text = Color(0xFF3D4964)
 val light_text_field_hint = Color(0xFF97A5BB)
-val light_text_hyper_link = light_primary
+val light_text_hyper_link = brand_green            // iOS: links
 
-val light_primary_button_background = light_primary
+val light_primary_button_background = brand_green  // iOS: AccentButtonColor
 val light_primary_button_border = Color(0xFF97A5BB)
 val light_primary_button_text = Color.White
-val light_primary_button_bordered_text = light_primary
+val light_primary_button_bordered_text = brand_green
 
-val light_secondary_button_background = light_primary_button_background
-val light_secondary_button_text = light_primary_button_text
-val light_secondary_button_border = light_primary_button_border
+val light_secondary_button_background = brand_green
+val light_secondary_button_text = Color.White
+val light_secondary_button_border = brand_green    // iOS: SecondaryButtonBorderColor
 val light_secondary_button_bordered_background = Color.White
-val light_secondary_button_bordered_text = light_primary_button_bordered_text
+val light_secondary_button_bordered_text = brand_green // iOS: SecondaryButtonTextColor
 
-val light_card_view_background = Color(0xFFF9FAFB)
+val light_card_view_background = brand_cream_strong // iOS: cardViewBackground
 val light_card_view_border = Color(0xFFCCD4E0)
 val light_divider = Color(0xFFCCD4E0)
 val light_certificate_foreground = Color(0xD94BD191)
 val light_bottom_sheet_toggle = Color(0xFF4E5A70)
 val light_warning = Color(0xFFFFC94D)
-val light_info = Color(0xFF3A9AE9)
+val light_info = brand_green                        // iOS: InfoColor
 val light_rate_stars = Color(0xFFFFC94D)
 val light_inactive_button_background = Color(0xFFCCD4E0)
-val light_success_green = Color(0xFF198571)
-val light_success_background = Color(0xFF0D7D4D)
+val light_success_green = brand_green               // Usar verde institucional
+val light_success_background = brand_green
 val light_dates_section_bar_past_due = light_warning
-val light_dates_section_bar_today = light_info
+val light_dates_section_bar_today = brand_green     // iOS: usando verde
 val light_dates_section_bar_this_week = light_text_primary_variant
 val light_dates_section_bar_next_week = light_text_field_border
 val light_dates_section_bar_upcoming = Color(0xFFCCD4E0)
-val light_auth_sso_success_background = light_secondary
+val light_auth_sso_success_background = brand_cream_strong
 val light_auth_google_button_background = Color.White
 val light_auth_facebook_button_background = Color(0xFF0866FF)
 val light_auth_microsoft_button_background = Color(0xFA000000)
-val light_component_horizontal_progress_completed_and_selected = Color(0xFF30a171)
+val light_component_horizontal_progress_completed_and_selected = brand_green // iOS: progressPercentage
 val light_component_horizontal_progress_completed = Color(0xFFbbe6d7)
-val light_component_horizontal_progress_selected = Color(0xFFF0CB00)
+val light_component_horizontal_progress_selected = brand_green  // iOS: slidingStrokeColor
 val light_component_horizontal_progress_default = Color(0xFFD6D3D1)
-val light_tab_unselected_btn_background = Color.White
-val light_tab_unselected_btn_content = light_primary
+val light_tab_unselected_btn_background = brand_cream
+val light_tab_unselected_btn_content = brand_green  // iOS: slidingTextColor
 val light_tab_selected_btn_content = Color.White
-val light_course_home_header_shade = Color(0xFFBABABA)
+val light_course_home_header_shade = brand_cream_strong // iOS: primaryHeaderColor, secondaryHeaderColor
 val light_course_home_back_btn_background = Color.White
 val light_settings_title_content = Color.White
-val light_progress_bar_color = light_success_green
+val light_progress_bar_color = brand_green          // iOS: progressPercentage
 val light_progress_bar_background_color = Color(0xFFCCD4E0)
 val light_grade_progress_bar_color = Color.Black
 val light_grade_progress_bar_background = Color(0xFFCCD4E0)
 val light_assignment_card_border = Color(0xFFCCD4E0)
+
+// ==========================================
+// Colores especiales para Llave MX (Login)
+// ==========================================
+val llave_mx_primary = brand_guinda                 // Botón principal Llave MX
+val llave_mx_primary_text = Color.White
+val llave_mx_secondary_background = Color.White     // Botón secundario
+val llave_mx_secondary_border = brand_guinda
+val llave_mx_secondary_text = brand_guinda
 
 val dark_primary = Color(0xFF3F68F8)
 val dark_primary_variant = Color(0xFF3700B3)

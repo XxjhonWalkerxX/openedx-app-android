@@ -45,4 +45,8 @@ object ApiConstants {
         const val CODE_QUERY_PARAM = "code"
         const val RESPONSE_TYPE = "code"
     }
+
+    object LlaveMx {
+        const val URL_LOGIN = "/api/mobile/llavemx/login/"
+    }
 }

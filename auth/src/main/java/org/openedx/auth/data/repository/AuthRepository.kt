@@ -69,6 +69,18 @@ class AuthRepository(
         return api.passwordReset(email).success
     }
 
+    /**
+     * Login con LlaveMX usando PKCE.
+     * Envía code + code_verifier al backend que hace el intercambio con LlaveMX.
+     */
+    suspend fun loginLlaveMx(code: String, codeVerifier: String, redirectUri: String) {
+        api.loginLlaveMx(
+            code = code,
+            codeVerifier = codeVerifier,
+            redirectUri = redirectUri
+        ).mapToDomain().processAuthResponse()
+    }
+
     private suspend fun AuthResponse.processAuthResponse() {
         if (error != null) {
             throw EdxError.UnknownException(error!!)

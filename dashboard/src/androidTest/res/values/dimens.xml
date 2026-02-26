@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+    Dimensiones EMI - Dashboard (androidTest)
+    Sincronizado con main para evitar errores de compilación
+    -->
+
+    <!-- Espaciados -->
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">16dp</dimen>
+    <dimen name="spacing_lg">24dp</dimen>
+
+    <!-- Card -->
+    <dimen name="card_radius">12dp</dimen>
+    <dimen name="dashboard_card_radius">12dp</dimen>
+
+    <!-- Altura de imagen en card principal -->
+    <dimen name="dashboard_primary_card_image_height">180dp</dimen>
+
+    <!-- Altura de imagen en card secundaria -->
+    <dimen name="dashboard_secondary_card_image_height">140dp</dimen>
+
+    <!-- Imagen principal / Hero -->
+    <dimen name="dashboard_hero_height">280dp</dimen>
+
+    <!-- Botón -->
+    <dimen name="primary_button_height">48dp</dimen>
+    <dimen name="button_corner_radius">8dp</dimen>
+</resources>

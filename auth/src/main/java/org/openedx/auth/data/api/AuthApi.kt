@@ -75,4 +75,16 @@ interface AuthApi {
     @FormUrlEncoded
     @POST(ApiConstants.URL_PASSWORD_RESET)
     suspend fun passwordReset(@Field("email") email: String): PasswordResetResponse
+
+    /**
+     * Login con LlaveMX usando PKCE.
+     * El backend hace el intercambio con LlaveMX y emite tokens de Open edX.
+     */
+    @FormUrlEncoded
+    @POST(ApiConstants.LlaveMx.URL_LOGIN)
+    suspend fun loginLlaveMx(
+        @Field("code") code: String,
+        @Field("code_verifier") codeVerifier: String,
+        @Field("redirect_uri") redirectUri: String,
+    ): AuthResponse
 }

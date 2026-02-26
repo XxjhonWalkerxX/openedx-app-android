@@ -1,6 +1,7 @@
 package org.openedx.auth.presentation.signin
 
 import android.app.Activity
+import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LiveData
@@ -21,6 +22,9 @@ import org.openedx.auth.presentation.AuthAnalytics
 import org.openedx.auth.presentation.AuthAnalyticsEvent
 import org.openedx.auth.presentation.AuthAnalyticsKey
 import org.openedx.auth.presentation.AuthRouter
+import org.openedx.auth.presentation.llavemx.LlaveMxAuthManager
+import org.openedx.auth.presentation.llavemx.LlaveMxAuthResult
+import org.openedx.auth.presentation.llavemx.LlaveMxCallbackActivity
 import org.openedx.auth.presentation.sso.BrowserAuthHelper
 import org.openedx.auth.presentation.sso.OAuthHelper
 import org.openedx.core.Validator
@@ -56,6 +60,7 @@ class SignInViewModel(
     private val calendarInteractor: CalendarInteractor,
     agreementProvider: AgreementProvider,
     private val browserAuthHelper: BrowserAuthHelper,
+    private val llaveMxAuthManager: LlaveMxAuthManager,
     val config: Config,
     val courseId: String?,
     val infoType: String?,
@@ -90,6 +95,70 @@ class SignInViewModel(
     init {
         collectAppUpgradeEvent()
         logSignInScreenEvent()
+    }
+
+    fun processLlaveMxResult(result: LlaveMxAuthResult?) {
+        when (result) {
+            is LlaveMxAuthResult.Success -> {
+                logger.d { "Authorization code recibido: ${result.authorizationCode}" }
+                // El code_verifier viene incluido en el resultado
+                signInLlaveMxWithPKCE(result.authorizationCode, result.codeVerifier)
+            }
+            is LlaveMxAuthResult.Error -> {
+                logger.e { "Error en LlaveMX: ${result.message}" }
+                _uiMessage.value = UIMessage.SnackBarMessage(result.message)
+                _uiState.update { it.copy(showProgress = false) }
+            }
+            null -> {
+                // No hay resultado aún
+            }
+        }
+    }
+
+    /**
+     * Realiza el login con LlaveMX enviando code + code_verifier al backend.
+     * El backend hace el intercambio PKCE con LlaveMX y emite tokens de Open edX.
+     */
+    private fun signInLlaveMxWithPKCE(code: String, codeVerifier: String) {
+        _uiState.update { it.copy(showProgress = true) }
+        viewModelScope.launch {
+            runCatching {
+                interactor.loginLlaveMx(
+                    code = code,
+                    codeVerifier = codeVerifier,
+                    redirectUri = LlaveMxAuthManager.REDIRECT_URI
+                )
+            }.onFailure { error ->
+                logger.e { "Error en login LlaveMX PKCE: $error" }
+                _uiMessage.value = UIMessage.SnackBarMessage(
+                    resourceManager.getString(CoreRes.string.core_error_unknown_error)
+                )
+                _uiState.update { it.copy(showProgress = false, loginFailure = true) }
+            }.onSuccess {
+                logger.d { "Login con LlaveMX exitoso" }
+                _uiState.update { it.copy(loginSuccess = true) }
+                setUserId()
+                appNotifier.send(SignInEvent())
+                _uiState.update { it.copy(showProgress = false) }
+            }
+        }
+    }
+
+    fun signInLlaveMx(context: Context) {
+        logger.d { "Iniciando autenticación con LlaveMX" }
+        _uiState.update { it.copy(showProgress = true) }
+
+        viewModelScope.launch {
+            try {
+                llaveMxAuthManager.startAuthorizationFlow(context)
+            } catch (e: Exception) {
+                logger.e { "Error al iniciar LlaveMX: ${e.message}" }
+                _uiMessage.value = UIMessage.SnackBarMessage(
+                    resourceManager.getString(CoreRes.string.core_error_unknown_error)
+                )
+                _uiState.update { it.copy(showProgress = false) }
+            }
+        }
     }
 
     fun login(username: String, password: String) {

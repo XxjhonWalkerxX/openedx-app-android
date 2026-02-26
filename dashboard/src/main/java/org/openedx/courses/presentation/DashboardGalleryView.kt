@@ -710,7 +710,7 @@ private fun PrimaryCourseButtons(
 private fun PrimaryCourseCaption(
     modifier: Modifier = Modifier,
     primaryCourse: EnrolledCourse,
-    imageHeight: Dp? = 140.dp,
+    imageHeight: Dp? = 180.dp,  // EMI: Aumentado de 140dp (equivalente iOS: 350pts escalado)
     apiHostUrl: String,
 ) {
     val context = LocalContext.current

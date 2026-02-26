@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.auth.data.model.AuthType
+import org.openedx.auth.presentation.llavemx.LlaveMxCallbackActivity
 import org.openedx.auth.presentation.signin.compose.LoginScreen
 import org.openedx.core.AppUpdateState
 import org.openedx.core.presentation.global.appupgrade.AppUpgradeRequiredScreen
@@ -43,6 +44,16 @@ class SignInFragment : Fragment() {
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val appUpgradeEvent by viewModel.appUpgradeEvent.observeAsState(null)
 
+                // Observar resultado de LlaveMX
+                LaunchedEffect(Unit) {
+                    LlaveMxCallbackActivity.authResult.observe(viewLifecycleOwner) { result ->
+                        result?.let {
+                            viewModel.processLlaveMxResult(it)
+                            LlaveMxCallbackActivity.clearResult()
+                        }
+                    }
+                }
+
                 if (appUpgradeEvent == null) {
                     if (viewModel.authCode != "" && !state.loginFailure && !state.loginSuccess) {
                         viewModel.signInAuthCode(viewModel.authCode)
@@ -65,6 +76,10 @@ class SignInFragment : Fragment() {
 
                                 AuthEvent.SignInBrowser -> {
                                     viewModel.signInBrowser(requireActivity())
+                                }
+
+                                AuthEvent.LlaveMxSignIn -> {
+                                    viewModel.signInLlaveMx(requireContext())
                                 }
 
                                 AuthEvent.RegisterClick -> {
@@ -118,6 +133,7 @@ internal sealed interface AuthEvent {
     data class SocialSignIn(val authType: AuthType) : AuthEvent
     data class OpenLink(val links: Map<String, String>, val link: String) : AuthEvent
     object SignInBrowser : AuthEvent
+    object LlaveMxSignIn : AuthEvent
     object RegisterClick : AuthEvent
     object ForgotPasswordClick : AuthEvent
     object BackClick : AuthEvent

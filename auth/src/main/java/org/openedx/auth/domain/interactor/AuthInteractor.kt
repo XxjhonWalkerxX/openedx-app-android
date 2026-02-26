@@ -37,4 +37,11 @@ class AuthInteractor(private val repository: AuthRepository) {
     suspend fun passwordReset(email: String): Boolean {
         return repository.passwordReset(email)
     }
+
+    /**
+     * Login con LlaveMX usando PKCE.
+     */
+    suspend fun loginLlaveMx(code: String, codeVerifier: String, redirectUri: String) {
+        repository.loginLlaveMx(code, codeVerifier, redirectUri)
+    }
 }

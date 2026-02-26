@@ -78,6 +78,22 @@
             </intent-filter>
         </activity>
 
+        <!-- LlaveMX OAuth Callback -->
+        <activity
+            android:name="org.openedx.auth.presentation.llavemx.LlaveMxCallbackActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="mx.aprende.android"
+                    android:host="oauth"
+                    android:path="/callback" />
+            </intent-filter>
+        </activity>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
