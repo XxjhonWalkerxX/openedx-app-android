@@ -24,7 +24,7 @@ class LlaveMxAuthManager(private val context: Context) {
         private const val CLIENT_ID = "202602091646467055"
         private const val AUTHORIZATION_ENDPOINT = "https://val-llave.infotec.mx/oauth.xhtml"
         
-        // Redirect URI público para uso en el intercambio de tokens
+        // Redirect URI registrado en LlaveMX — HTTPS bridge que hace el deep link a la app
         const val REDIRECT_URI = "https://dev.mexicox.gob.mx/mobile/callback"
 
         // Almacenamiento seguro

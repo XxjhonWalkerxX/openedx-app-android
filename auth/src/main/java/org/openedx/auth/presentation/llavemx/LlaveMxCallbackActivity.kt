@@ -98,6 +98,9 @@ class LlaveMxCallbackActivity : ComponentActivity() {
                 // Obtener code_verifier ANTES de limpiar los datos
                 val codeVerifier = authManager.getStoredCodeVerifier()
                 if (codeVerifier != null) {
+                    // ⚡ CRÍTICO: Procesar INMEDIATAMENTE para evitar que expire el código
+                    // Los códigos de LlaveMX expiran en ~1 minuto, por lo que cualquier
+                    // delay artificial puede causar que el intercambio PKCE falle
                     setSuccessResult(code, codeVerifier)
                 } else {
                     logger.e { "code_verifier no encontrado en almacenamiento" }
@@ -108,14 +111,17 @@ class LlaveMxCallbackActivity : ComponentActivity() {
     }
 
     private fun setSuccessResult(code: String, codeVerifier: String) {
+        // ⚡ Procesar inmediatamente sin delay para evitar que expire el código
+        _authResult.value = LlaveMxAuthResult.Success(code, codeVerifier)
+        authManager.clearStoredData()
+        
+        // Mostrar UI brevemente (opcional)
         setContent {
             OpenEdXTheme {
                 CallbackResultScreen(
                     isSuccess = true,
                     message = stringResource(R.string.llavemx_auth_success),
                     onDismiss = {
-                        _authResult.value = LlaveMxAuthResult.Success(code, codeVerifier)
-                        authManager.clearStoredData()
                         finish()
                     }
                 )
@@ -124,14 +130,17 @@ class LlaveMxCallbackActivity : ComponentActivity() {
     }
 
     private fun setErrorResult(errorMessage: String) {
+        // ⚡ Procesar inmediatamente sin delay
+        _authResult.value = LlaveMxAuthResult.Error(errorMessage)
+        authManager.clearStoredData()
+        
+        // Mostrar UI brevemente (opcional)
         setContent {
             OpenEdXTheme {
                 CallbackResultScreen(
                     isSuccess = false,
                     message = errorMessage,
                     onDismiss = {
-                        _authResult.value = LlaveMxAuthResult.Error(errorMessage)
-                        authManager.clearStoredData()
                         finish()
                     }
                 )
@@ -150,8 +159,9 @@ private fun CallbackResultScreen(
     onDismiss: () -> Unit
 ) {
     LaunchedEffect(Unit) {
-        // Auto-cerrar después de mostrar brevemente
-        delay(1500)
+        // Auto-cerrar rápidamente (reducido de 1500ms a 300ms)
+        // Solo para dar feedback visual sin retrasar el proceso
+        delay(300)
         onDismiss()
     }
 
