@@ -3,7 +3,7 @@ SSO_URL: 'https://dev.mexicox.gob.mx'
 SSO_FINISHED_URL:  'https://dev.mexicox.gob.mx'
 ENVIRONMENT_DISPLAY_NAME: 'Cursos'
 FEEDBACK_EMAIL_ADDRESS: 'support@example.com'
-OAUTH_CLIENT_ID: 'wYuF3CzbnANqqkMpnScBZ8L0aEuTUjfHlabqpBOt'
+OAUTH_CLIENT_ID: 'zrxzez1eCwVzjNNHzuerPmt5uso7guriA2TpqDiN'
 
 # Keep empty to hide setting
 AGREEMENT_URLS:

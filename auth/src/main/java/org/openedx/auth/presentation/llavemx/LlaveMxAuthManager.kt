@@ -166,7 +166,7 @@ class LlaveMxAuthManager(private val context: Context) {
         val uri = Uri.parse(AUTHORIZATION_ENDPOINT).buildUpon()
             .appendQueryParameter("response_type", "code")
             .appendQueryParameter("client_id", CLIENT_ID)
-            .appendQueryParameter("redirect_url", REDIRECT_URI)  // ⚠️ redirect_url no redirect_uri
+            .appendQueryParameter("redirect_url", REDIRECT_URI) 
             .appendQueryParameter("code_challenge", codeChallenge)
             .appendQueryParameter("code_challenge_method", "S256")
             .appendQueryParameter("state", state)
