@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="pre_auth_title" tools:ignore="ExtraTranslation">Courses and programs from the world\'s best universities in your pocket.</string>
-    <string name="pre_auth_search_title" tools:ignore="ExtraTranslation">What do you want to learn?</string>
-    <string name="pre_auth_search_hint" tools:ignore="ExtraTranslation">Search our 3000+ courses</string>
-    <string name="pre_auth_explore_all_courses" tools:ignore="ExtraTranslation">Explore all courses</string>
-    <string name="auth_forgot_password">Forgot password?</string>
-    <string name="auth_email">Email</string>
-    <string name="auth_invalid_email">Invalid email</string>
-    <string name="auth_email_username" tools:ignore="MissingTranslation">Email or Username</string>
-    <string name="auth_invalid_email_username" tools:ignore="MissingTranslation">Invalid email or username</string>
-    <string name="auth_invalid_password">Password is too short</string>
-    <string name="auth_welcome_back">Welcome back! Sign in to access your courses.</string>
+    <string name="pre_auth_title" tools:ignore="ExtraTranslation">Los cursos institucionales de @prende.mx, ahora en tu bolsillo.</string>
+    <string name="pre_auth_search_title" tools:ignore="ExtraTranslation">¿Qué quieres aprender hoy?</string>
+    <string name="pre_auth_search_hint" tools:ignore="ExtraTranslation">Busca entre nuestros cursos</string>
+    <string name="pre_auth_explore_all_courses" tools:ignore="ExtraTranslation">Explorar todos los cursos</string>
+    <string name="auth_forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="auth_email">Correo electrónico</string>
+    <string name="auth_invalid_email">Correo inválido</string>
+    <string name="auth_email_username" tools:ignore="MissingTranslation">Correo o nombre de usuario</string>
+    <string name="auth_invalid_email_username" tools:ignore="MissingTranslation">Correo o usuario inválido</string>
+    <string name="auth_invalid_password">La contraseña es muy corta</string>
+    <string name="auth_welcome_back">¡Bienvenido/a de vuelta! Inicia sesión para acceder a tus cursos.</string>
+    <string name="auth_or_continue_with">o continúa con</string>
     <string name="auth_show_optional_fields">Show optional fields</string>
     <string name="auth_hide_optional_fields">Hide optional fields</string>
     <string name="auth_create_account">Create account</string>
@@ -20,12 +21,12 @@
     <string name="auth_check_your_email">Check your email</string>
     <string name="auth_restore_password_success">We have sent a password recover instructions to your email %s</string>
     <string name="auth_example_email" translatable="false">username@domain.com</string>
-    <string name="auth_enter_email_username" tools:ignore="MissingTranslation">Enter email or username</string>
-    <string name="auth_error_empty_username_email">Please enter your username or e-mail address and try again.</string>
-    <string name="auth_error_empty_email">Please enter your e-mail address and try again.</string>
-    <string name="auth_enter_password">Enter password</string>
-    <string name="auth_error_empty_password">Please enter your password and try again.</string>
-    <string name="auth_create_new_account">Create an account to start learning today!</string>
+    <string name="auth_enter_email_username" tools:ignore="MissingTranslation">Ingresa correo o usuario</string>
+    <string name="auth_error_empty_username_email">Ingresa tu correo o nombre de usuario e intenta de nuevo.</string>
+    <string name="auth_error_empty_email">Ingresa tu correo electrónico e intenta de nuevo.</string>
+    <string name="auth_enter_password">Ingresa tu contraseña</string>
+    <string name="auth_error_empty_password">Ingresa tu contraseña e intenta de nuevo.</string>
+    <string name="auth_create_new_account">¡Crea una cuenta y comienza a aprender hoy!</string>
     <string name="auth_compete_registration" translatable="false">Complete your registration</string>
     <string name="auth_google" tools:ignore="ExtraTranslation">Sign in with Google</string>
     <string name="auth_facebook" tools:ignore="ExtraTranslation">Sign in with Facebook</string>
@@ -46,6 +47,9 @@
 
     <!-- LlaveMX -->
     <string name="llavemx_sign_in">Iniciar sesión con LlaveMX</string>
+    <string name="llavemx_sign_in_button">Iniciar sesión</string>
+    <string name="llavemx_card_title">Inicia sesión con tu cuenta</string>
+    <string name="llavemx_traditional_login_label">Iniciar sesión con correo y contraseña</string>
     <string name="llavemx_auth_success">Autenticación exitosa</string>
     <string name="llavemx_auth_error">Error en la autenticación</string>
 </resources>

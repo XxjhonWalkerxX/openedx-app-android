@@ -18,9 +18,8 @@ import java.security.SecureRandom
 class LlaveMxAuthManager(private val context: Context) {
 
     private val logger = Logger("LlaveMxAuthManager")
-
-    companion object {
-        // Configuración OAuth2 de LlaveMX
+    // Configuración OAuth2 de LlaveMX
+    companion object {      
         private const val CLIENT_ID = "202602091646467055"
         private const val AUTHORIZATION_ENDPOINT = "https://val-llave.infotec.mx/oauth.xhtml"
         
