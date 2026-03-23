@@ -10,6 +10,8 @@ val brand_green = Color(0xFF2B6959)        // Verde institucional (Primary/Accen
 val brand_cream = Color(0xFFECE9E4)        // Crema claro (Fondo general)
 val brand_cream_strong = Color(0xFFDFD4C2) // Crema fuerte (Cards, Headers)
 val brand_guinda = Color(0xFF611232)       // Guinda institucional (Llave MX)
+val accent_orange = Color(0xFFE07B39)      // Acento cards (carrusel rotativo)
+val accent_pink = Color(0xFFD94F7C)        // Acento cards (carrusel rotativo)
 
 // ==========================================
 // TEMA CLARO - Personalizado EMI
