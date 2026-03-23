@@ -1,13 +1,16 @@
 package org.openedx.auth.presentation.signin.compose
 
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
-import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,7 +23,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
@@ -39,10 +47,12 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -51,7 +61,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -61,7 +70,6 @@ import org.openedx.auth.presentation.signin.AuthEvent
 import org.openedx.auth.presentation.signin.SignInUIState
 import org.openedx.auth.presentation.ui.LoginTextField
 import org.openedx.auth.presentation.ui.PasswordVisibilityIcon
-import org.openedx.auth.presentation.ui.SocialAuthView
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
@@ -74,6 +82,7 @@ import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.theme.compose.SignInLogoView
+import org.openedx.core.ui.theme.llave_mx_primary
 import org.openedx.foundation.presentation.UIMessage
 import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.WindowType
@@ -125,13 +134,11 @@ internal fun LoginScreen(
             )
         }
 
-        Image(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(fraction = 0.3f),
-            painter = painterResource(id = coreR.drawable.core_top_header),
-            contentScale = ContentScale.FillBounds,
-            contentDescription = null
+                .fillMaxHeight(fraction = 0.3f)
+                .background(MaterialTheme.appColors.primary)
         )
         HandleUIMessage(
             uiMessage = uiMessage,
@@ -171,21 +178,6 @@ internal fun LoginScreen(
                             .displayCutoutForLandscape()
                             .then(contentPaddings),
                     ) {
-                        Text(
-                            modifier = Modifier.testTag("txt_sign_in_title"),
-                            text = stringResource(id = coreR.string.core_sign_in),
-                            color = MaterialTheme.appColors.textPrimary,
-                            style = MaterialTheme.appTypography.displaySmall
-                        )
-                        Text(
-                            modifier = Modifier
-                                .testTag("txt_sign_in_description")
-                                .padding(top = 4.dp),
-                            text = stringResource(id = R.string.auth_welcome_back),
-                            color = MaterialTheme.appColors.textPrimary,
-                            style = MaterialTheme.appTypography.titleSmall
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
                         AuthForm(
                             buttonWidth,
                             state,
@@ -224,123 +216,157 @@ private fun AuthForm(
     val keyboardController = LocalSoftwareKeyboardController.current
     var isEmailError by rememberSaveable { mutableStateOf(false) }
     var isPasswordError by rememberSaveable { mutableStateOf(false) }
+    var showTraditionalLogin by rememberSaveable { mutableStateOf(false) }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        if (!state.isBrowserLoginEnabled) {
-            LoginTextField(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                title = stringResource(id = R.string.auth_email_username),
-                description = stringResource(id = R.string.auth_enter_email_username),
-                onValueChanged = {
-                    login = it
-                    isEmailError = false
-                },
-                isError = isEmailError,
-                errorMessages = stringResource(id = R.string.auth_error_empty_username_email)
-            )
 
-            Spacer(modifier = Modifier.height(18.dp))
-            PasswordTextField(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                onValueChanged = {
-                    password = it
-                    isPasswordError = false
-                },
-                onPressDone = {
-                    keyboardController?.hide()
-                    if (password.isNotEmpty()) {
-                        onEvent(AuthEvent.SignIn(login = login, password = password))
-                    } else {
-                        isEmailError = login.isEmpty()
-                        isPasswordError = password.isEmpty()
-                    }
-                },
-                isError = isPasswordError,
-            )
-        } else {
-            Spacer(modifier = Modifier.height(40.dp))
-        }
-
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp, bottom = 36.dp)
+        // ── Tarjeta LlaveMX (opción principal) ──────────────────────────
+        Card(
+            shape = MaterialTheme.appShapes.cardShape,
+            elevation = 4.dp,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            if (!state.isBrowserLoginEnabled) {
-                if (state.isLogistrationEnabled.not() && state.isRegistrationEnabled) {
-                    Text(
-                        modifier = Modifier
-                            .testTag("txt_register")
-                            .noRippleClickable {
-                                onEvent(AuthEvent.RegisterClick)
-                            },
-                        text = stringResource(id = coreR.string.core_register),
-                        color = MaterialTheme.appColors.primary,
-                        style = MaterialTheme.appTypography.labelLarge
+            Column(
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(id = R.string.llavemx_card_title),
+                    color = MaterialTheme.appColors.textPrimary,
+                    style = MaterialTheme.appTypography.titleMedium,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.ic_llavemx_logo),
+                    contentDescription = "Llave MX",
+                    modifier = Modifier
+                        .width(160.dp)
+                        .height(108.dp),
+                    contentScale = ContentScale.Fit,
+                )
+                Spacer(modifier = Modifier.height(28.dp))
+                if (state.showProgress) {
+                    CircularProgressIndicator(color = llave_mx_primary)
+                } else {
+                    OpenEdXButton(
+                        modifier = buttonWidth.testTag("btn_llavemx"),
+                        text = stringResource(id = R.string.llavemx_sign_in_button),
+                        textColor = Color.White,
+                        backgroundColor = llave_mx_primary,
+                        onClick = {
+                            keyboardController?.hide()
+                            onEvent(AuthEvent.LlaveMxSignIn)
+                        }
                     )
                 }
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    modifier = Modifier
-                        .testTag("txt_forgot_password")
-                        .noRippleClickable {
-                            onEvent(AuthEvent.ForgotPasswordClick)
-                        },
-                    text = stringResource(id = R.string.auth_forgot_password),
-                    color = MaterialTheme.appColors.infoVariant,
-                    style = MaterialTheme.appTypography.labelLarge
-                )
             }
         }
 
-        if (state.showProgress) {
-            CircularProgressIndicator(color = MaterialTheme.appColors.primary)
-        } else {
-            OpenEdXButton(
-                modifier = buttonWidth.testTag("btn_sign_in"),
-                text = stringResource(id = coreR.string.core_sign_in),
-                textColor = MaterialTheme.appColors.primaryButtonText,
-                backgroundColor = MaterialTheme.appColors.secondaryButtonBackground,
-                onClick = {
-                    if (state.isBrowserLoginEnabled) {
-                        onEvent(AuthEvent.SignInBrowser)
-                    } else {
-                        keyboardController?.hide()
-                        if (login.isNotEmpty() && password.isNotEmpty()) {
-                            onEvent(AuthEvent.SignIn(login = login, password = password))
-                        } else {
-                            isEmailError = login.isEmpty()
-                            isPasswordError = password.isEmpty()
-                        }
-                    }
-                }
-            )
+        Spacer(modifier = Modifier.height(28.dp))
 
-            // Botón de LlaveMX
-            Spacer(modifier = Modifier.height(16.dp))
-            OpenEdXButton(
-                modifier = buttonWidth.testTag("btn_llavemx"),
-                text = stringResource(id = R.string.llavemx_sign_in),
-                textColor = Color.White,
-                backgroundColor = Color(0xFF611232), // Guinda institucional
-                onClick = {
-                    keyboardController?.hide()
-                    onEvent(AuthEvent.LlaveMxSignIn)
-                }
-            )
-        }
-        if (state.isSocialAuthEnabled) {
-            SocialAuthView(
-                modifier = buttonWidth,
-                isGoogleAuthEnabled = state.isGoogleAuthEnabled,
-                isFacebookAuthEnabled = state.isFacebookAuthEnabled,
-                isMicrosoftAuthEnabled = state.isMicrosoftAuthEnabled,
-                isSignIn = true,
+        // ── Banner de acceso tradicional (opción secundaria) ────────────
+        androidx.compose.material.Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.appShapes.cardShape,
+            border = BorderStroke(1.dp, MaterialTheme.appColors.divider),
+            color = MaterialTheme.appColors.background,
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .animateContentSize()
             ) {
-                keyboardController?.hide()
-                onEvent(AuthEvent.SocialSignIn(it))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 14.dp)
+                        .noRippleClickable { showTraditionalLogin = !showTraditionalLogin },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.llavemx_traditional_login_label),
+                        style = MaterialTheme.appTypography.bodySmall,
+                        color = MaterialTheme.appColors.textSecondary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Icon(
+                        imageVector = if (showTraditionalLogin) Icons.Filled.KeyboardArrowUp
+                                      else Icons.Filled.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = MaterialTheme.appColors.textSecondary,
+                    )
+                }
+
+                if (showTraditionalLogin) {
+                    if (!state.isBrowserLoginEnabled) {
+                        LoginTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            title = stringResource(id = R.string.auth_email_username),
+                            description = stringResource(id = R.string.auth_enter_email_username),
+                            onValueChanged = {
+                                login = it
+                                isEmailError = false
+                            },
+                            isError = isEmailError,
+                            errorMessages = stringResource(id = R.string.auth_error_empty_username_email),
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        PasswordTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            onValueChanged = {
+                                password = it
+                                isPasswordError = false
+                            },
+                            onPressDone = {
+                                keyboardController?.hide()
+                                if (login.isNotEmpty() && password.isNotEmpty()) {
+                                    onEvent(AuthEvent.SignIn(login = login, password = password))
+                                } else {
+                                    isEmailError = login.isEmpty()
+                                    isPasswordError = password.isEmpty()
+                                }
+                            },
+                            isError = isPasswordError,
+                        )
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        Text(
+                            modifier = Modifier
+                                .testTag("txt_forgot_password")
+                                .noRippleClickable { onEvent(AuthEvent.ForgotPasswordClick) },
+                            text = stringResource(id = R.string.auth_forgot_password),
+                            color = MaterialTheme.appColors.infoVariant,
+                            style = MaterialTheme.appTypography.labelLarge,
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OpenEdXButton(
+                        modifier = buttonWidth.testTag("btn_sign_in"),
+                        text = stringResource(id = coreR.string.core_sign_in),
+                        textColor = MaterialTheme.appColors.primaryButtonText,
+                        backgroundColor = MaterialTheme.appColors.secondaryButtonBackground,
+                        onClick = {
+                            if (state.isBrowserLoginEnabled) {
+                                onEvent(AuthEvent.SignInBrowser)
+                            } else {
+                                keyboardController?.hide()
+                                if (login.isNotEmpty() && password.isNotEmpty()) {
+                                    onEvent(AuthEvent.SignIn(login = login, password = password))
+                                } else {
+                                    isEmailError = login.isEmpty()
+                                    isPasswordError = password.isEmpty()
+                                }
+                            }
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
             }
         }
     }
@@ -429,9 +455,7 @@ private fun PasswordTextField(
 }
 
 @Preview(uiMode = UI_MODE_NIGHT_NO)
-@Preview(uiMode = UI_MODE_NIGHT_YES)
 @Preview(name = "NEXUS_5_Light", device = Devices.NEXUS_5, uiMode = UI_MODE_NIGHT_NO)
-@Preview(name = "NEXUS_5_Dark", device = Devices.NEXUS_5, uiMode = UI_MODE_NIGHT_YES)
 @Composable
 private fun SignInScreenPreview() {
     OpenEdXTheme {
@@ -445,9 +469,7 @@ private fun SignInScreenPreview() {
 }
 
 @Preview(uiMode = UI_MODE_NIGHT_NO)
-@Preview(uiMode = UI_MODE_NIGHT_YES)
 @Preview(name = "NEXUS_5_Light", device = Devices.NEXUS_5, uiMode = UI_MODE_NIGHT_NO)
-@Preview(name = "NEXUS_5_Dark", device = Devices.NEXUS_5, uiMode = UI_MODE_NIGHT_YES)
 @Composable
 private fun SignInUsingBrowserScreenPreview() {
     OpenEdXTheme {
@@ -463,7 +485,6 @@ private fun SignInUsingBrowserScreenPreview() {
 }
 
 @Preview(name = "NEXUS_9_Light", device = Devices.NEXUS_9, uiMode = UI_MODE_NIGHT_NO)
-@Preview(name = "NEXUS_9_Night", device = Devices.NEXUS_9, uiMode = UI_MODE_NIGHT_YES)
 @Composable
 private fun SignInScreenTabletPreview() {
     OpenEdXTheme {
