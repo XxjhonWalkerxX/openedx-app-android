@@ -64,15 +64,20 @@ class LlaveMxCallbackActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        val data: Uri? = intent?.data
+        val rawData: Uri? = intent?.data
 
-        if (data == null) {
+        if (rawData == null) {
             logger.e { "Intent sin datos de URI" }
             setErrorResult("No se recibieron datos de autorización")
             return
         }
 
-        logger.d { "Deep link recibido: $data" }
+        // Chrome Custom Tabs codifica '&' como '&amp;' al crear el Android Intent para
+        // custom schemes via window.location.href. Decodificamos antes de parsear.
+        val uriString = rawData.toString().replace("&amp;", "&")
+        val data = if (uriString != rawData.toString()) Uri.parse(uriString) else rawData
+
+        logger.d { "Deep link recibido: $rawData" }
 
         // Extraer parámetros
         val code = data.getQueryParameter("code")
