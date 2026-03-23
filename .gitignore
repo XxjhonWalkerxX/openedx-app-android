@@ -19,3 +19,8 @@ local.properties
 .venv/
 i18n/
 **/values-*/strings.xml
+
+# Local development
+.claude/
+CLAUDE.md
+docs/screenshots/
