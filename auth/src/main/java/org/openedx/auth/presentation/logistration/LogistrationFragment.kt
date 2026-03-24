@@ -10,9 +10,9 @@ import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.auth.presentation.llavemx.LlaveMxCallbackActivity
+import org.openedx.auth.presentation.ui.OnboardingScreen
 import org.openedx.core.ApiConstants
 import org.openedx.core.ui.theme.OpenEdXTheme
-import org.openedx.auth.presentation.ui.OnboardingScreen
 import org.openedx.foundation.utils.UrlUtils
 
 class LogistrationFragment : Fragment() {
@@ -56,9 +56,6 @@ class LogistrationFragment : Fragment() {
                         } else {
                             viewModel.navigateToSignIn(parentFragmentManager)
                         }
-                    },
-                    onSignInWithCredentials = { login, password ->
-                        viewModel.navigateToSignIn(parentFragmentManager)
                     },
                     onLlaveMxSignIn = {
                         org.openedx.auth.presentation.llavemx.LlaveMxAuthManager(requireContext())
