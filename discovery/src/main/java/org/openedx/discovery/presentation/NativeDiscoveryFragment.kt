@@ -4,29 +4,37 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ManageAccounts
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -43,33 +51,38 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.core.domain.model.Media
 import org.openedx.core.ui.AuthButtonsPanel
-import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OfflineModeDialog
-import org.openedx.core.ui.StaticSearchBar
-import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.shouldLoadMore
-import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
-import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.theme.brand_cream
+import org.openedx.core.ui.theme.brand_green
+import org.openedx.core.ui.theme.brand_guinda
+import org.openedx.core.ui.theme.ttRoundsCompressedMedium
+import org.openedx.core.ui.theme.ttRoundsCompressedThinItalic
+import org.openedx.core.ui.theme.ttRoundsFamily
 import org.openedx.discovery.R
 import org.openedx.discovery.domain.model.Course
 import org.openedx.discovery.presentation.NativeDiscoveryFragment.Companion.LOAD_MORE_THRESHOLD
@@ -78,7 +91,21 @@ import org.openedx.foundation.presentation.UIMessage
 import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.WindowType
 import org.openedx.foundation.presentation.rememberWindowSize
-import org.openedx.foundation.presentation.windowSizeValue
+
+// ── Paleta y constantes de diseño ────────────────────────────────────────────
+private val heroGradient = listOf(
+    Color(0xFF1D4D42),
+    Color(0xFF2B6959),
+    Color(0xFF3D8A72),
+)
+private val accentColors = listOf(
+    Color(0xFF2B6959), // brand_green
+    Color(0xFF611232), // brand_guinda
+    Color(0xFF3D3020), // dark warm
+    Color(0xFF1D4D42), // green dark
+)
+private val heroHeight = 240.dp
+private val heroOverlap = 28.dp
 
 class NativeDiscoveryFragment : Fragment() {
 
@@ -200,232 +227,355 @@ internal fun DiscoveryScreen(
 ) {
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()
-    val firstVisibleIndex = remember {
-        mutableIntStateOf(scrollState.firstVisibleItemIndex)
-    }
-    val pullRefreshState =
-        rememberPullRefreshState(refreshing = refreshing, onRefresh = { onSwipeRefresh() })
-
-    var isInternetConnectionShown by rememberSaveable {
-        mutableStateOf(false)
-    }
+    val firstVisibleIndex = remember { mutableIntStateOf(scrollState.firstVisibleItemIndex) }
+    val pullRefreshState = rememberPullRefreshState(refreshing = refreshing, onRefresh = { onSwipeRefresh() })
+    var isInternetConnectionShown by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         scaffoldState = scaffoldState,
         modifier = Modifier
             .fillMaxSize()
-            .semantics {
-                testTagsAsResourceId = true
-            },
-        backgroundColor = MaterialTheme.appColors.background,
+            .semantics { testTagsAsResourceId = true },
+        backgroundColor = brand_cream,
         bottomBar = {
             if (!isUserLoggedIn) {
                 Box(
                     modifier = Modifier
-                        .padding(
-                            horizontal = 16.dp,
-                            vertical = 32.dp,
-                        )
+                        .padding(horizontal = 16.dp, vertical = 32.dp)
                         .navigationBarsPadding()
                 ) {
                     AuthButtonsPanel(
                         onRegisterClick = onRegisterClick,
                         onSignInClick = onSignInClick,
-                        showRegisterButton = isRegistrationEnabled
+                        showRegisterButton = isRegistrationEnabled,
                     )
                 }
             }
         }
-    ) {
-        val searchTabWidth by remember(key1 = windowSize) {
-            mutableStateOf(
-                windowSize.windowSizeValue(
-                    expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
-                    compact = Modifier.fillMaxWidth()
-                )
-            )
-        }
-
-        val contentWidth by remember(key1 = windowSize) {
-            mutableStateOf(
-                windowSize.windowSizeValue(
-                    expanded = Modifier.widthIn(Dp.Unspecified, 560.dp),
-                    compact = Modifier.fillMaxWidth()
-                )
-            )
-        }
-
-        val contentPaddings by remember(key1 = windowSize) {
-            mutableStateOf(
-                windowSize.windowSizeValue(
-                    expanded = PaddingValues(
-                        top = 32.dp,
-                        bottom = 40.dp
-                    ),
-                    compact = PaddingValues(horizontal = 24.dp, vertical = 20.dp)
-                )
-            )
-        }
-
+    ) { paddingValues ->
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
-        if (canShowBackButton) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            // Verde hero — fixed behind the scrollable content
+            DiscoveryHero(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(heroHeight),
+                canShowBackButton = canShowBackButton,
+                onBackClick = onBackClick,
+                onSettingsClick = onSettingsClick,
+                onSearchClick = onSearchClick,
+            )
+
+            // Scrollable content overlay
             Box(
                 modifier = Modifier
-                    .statusBarsPadding()
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.CenterStart
+                    .fillMaxSize()
+                    .pullRefresh(pullRefreshState)
             ) {
-                BackBtn(
-                    modifier = Modifier.padding(end = 16.dp),
-                    tint = MaterialTheme.appColors.primary
-                ) {
-                    onBackClick()
+                when (state) {
+                    is DiscoveryUIState.Loading -> {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            item {
+                                Spacer(modifier = Modifier.height(heroHeight - heroOverlap))
+                            }
+                            item {
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+                                    color = brand_cream,
+                                    elevation = 0.dp,
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(300.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        CircularProgressIndicator(color = brand_green)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    is DiscoveryUIState.Courses -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            state = scrollState,
+                        ) {
+                            item(key = "spacer") {
+                                Spacer(modifier = Modifier.height(heroHeight - heroOverlap))
+                            }
+                            item(key = "header") {
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+                                    color = brand_cream,
+                                    elevation = 0.dp,
+                                ) {
+                                    Column(modifier = Modifier.fillMaxWidth()) {
+                                        Box(
+                                            modifier = Modifier
+                                                .align(Alignment.CenterHorizontally)
+                                                .padding(top = 12.dp)
+                                                .size(width = 36.dp, height = 4.dp)
+                                                .clip(RoundedCornerShape(2.dp))
+                                                .background(Color(0xFFC8C3BA)),
+                                        )
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 20.dp)
+                                                .padding(top = 20.dp, bottom = 12.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Text(
+                                                modifier = Modifier.testTag("txt_discovery_new"),
+                                                text = "Todos los cursos",
+                                                style = TextStyle(
+                                                    fontFamily = ttRoundsCompressedMedium,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontSize = 20.sp,
+                                                    color = Color(0xFF1C1B18),
+                                                    letterSpacing = (-0.2).sp,
+                                                ),
+                                            )
+                                            Text(
+                                                text = "${state.courses.size} disponibles",
+                                                style = TextStyle(
+                                                    fontFamily = ttRoundsFamily,
+                                                    fontWeight = FontWeight.Normal,
+                                                    fontSize = 12.sp,
+                                                    color = Color(0xFF9A9590),
+                                                ),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            itemsIndexed(state.courses) { index, course ->
+                                Box(
+                                    modifier = Modifier
+                                        .background(brand_cream)
+                                        .padding(horizontal = 20.dp)
+                                        .padding(bottom = 10.dp),
+                                ) {
+                                    DiscoveryCourseItem(
+                                        apiHostUrl = apiHostUrl,
+                                        course = course,
+                                        accentColor = accentColors[index % accentColors.size],
+                                        onClick = { onItemClick(course) },
+                                    )
+                                }
+                            }
+                            item(key = "load_more") {
+                                if (canLoadMore) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(brand_cream)
+                                            .padding(vertical = 16.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        CircularProgressIndicator(color = brand_green)
+                                    }
+                                }
+                            }
+                            item(key = "bottom_space") {
+                                Spacer(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(80.dp)
+                                        .background(brand_cream),
+                                )
+                            }
+                        }
+                        if (scrollState.shouldLoadMore(firstVisibleIndex, LOAD_MORE_THRESHOLD)) {
+                            paginationCallback()
+                        }
+                    }
+                }
+
+                PullRefreshIndicator(
+                    refreshing = refreshing,
+                    state = pullRefreshState,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    contentColor = brand_green,
+                )
+
+                if (!isInternetConnectionShown && !hasInternetConnection) {
+                    OfflineModeDialog(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter),
+                        onDismissCLick = { isInternetConnectionShown = true },
+                        onReloadClick = {
+                            isInternetConnectionShown = true
+                            onReloadClick()
+                        }
+                    )
                 }
             }
         }
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(it)
-                .statusBarsInset()
-                .displayCutoutForLandscape(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Toolbar(
-                    label = stringResource(id = R.string.discovery_Discovery),
-                    canShowBackBtn = canShowBackButton,
-                    canShowSettingsIcon = !canShowBackButton,
-                    onBackClick = onBackClick,
-                    onSettingsClick = onSettingsClick
-                )
+    }
+}
 
-                Spacer(modifier = Modifier.height(16.dp))
-                StaticSearchBar(
-                    modifier = Modifier
-                        .height(48.dp)
-                        .padding(horizontal = 24.dp)
-                        .then(searchTabWidth),
-                    onClick = {
-                        onSearchClick()
-                    }
+// ── Hero verde de exploración ─────────────────────────────────────────────────
+@Composable
+private fun DiscoveryHero(
+    modifier: Modifier,
+    canShowBackButton: Boolean,
+    onBackClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onSearchClick: () -> Unit,
+) {
+    Box(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.linearGradient(
+                        colors = heroGradient,
+                        start = Offset(0f, 0f),
+                        end = Offset(Float.POSITIVE_INFINITY, 440f),
+                    )
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-            Surface(
-                color = MaterialTheme.appColors.background
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .background(brand_guinda),
+        )
+
+        Box(
+            modifier = Modifier
+                .size(200.dp)
+                .clip(CircleShape)
+                .border(32.dp, Color.White.copy(alpha = 0.06f), CircleShape),
+        )
+        Box(
+            modifier = Modifier
+                .size(110.dp)
+                .clip(CircleShape)
+                .border(20.dp, Color.White.copy(alpha = 0.05f), CircleShape),
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .padding(horizontal = 20.dp)
+                .padding(top = 8.dp, bottom = 40.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
+                if (canShowBackButton) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.14f))
+                            .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape)
+                            .clickable(onClick = onBackClick),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                } else {
+                    Spacer(modifier = Modifier.size(40.dp))
+                }
+
+                if (!canShowBackButton) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.14f))
+                            .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape)
+                            .clickable(onClick = onSettingsClick),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ManageAccounts,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                } else {
+                    Spacer(modifier = Modifier.size(40.dp))
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "Explorar",
+                    style = TextStyle(
+                        fontFamily = ttRoundsCompressedMedium,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 30.sp,
+                        color = Color.White,
+                        letterSpacing = (-0.3).sp,
+                    ),
+                )
+                Text(
+                    text = "Encuentra tu próximo aprendizaje",
+                    style = TextStyle(
+                        fontFamily = ttRoundsCompressedThinItalic,
+                        fontWeight = FontWeight.Thin,
+                        fontStyle = FontStyle.Italic,
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.65f),
+                        letterSpacing = 0.2.sp,
+                    ),
+                )
+                Spacer(modifier = Modifier.height(6.dp))
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .pullRefresh(pullRefreshState)
+                        .height(46.dp)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(Color.White)
+                        .clickable(onClick = onSearchClick)
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.CenterStart,
                 ) {
-                    when (state) {
-                        is DiscoveryUIState.Loading -> {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(color = MaterialTheme.appColors.primary)
-                            }
-                        }
-
-                        is DiscoveryUIState.Courses -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                LazyColumn(
-                                    Modifier
-                                        .fillMaxHeight()
-                                        .then(contentWidth),
-                                    contentPadding = contentPaddings,
-                                    state = scrollState
-                                ) {
-                                    item {
-                                        Column {
-                                            Text(
-                                                modifier = Modifier.testTag("txt_discovery_new"),
-                                                text = stringResource(id = R.string.discovery_discovery_new),
-                                                color = MaterialTheme.appColors.textPrimary,
-                                                style = MaterialTheme.appTypography.displaySmall
-                                            )
-                                            Text(
-                                                modifier = Modifier
-                                                    .testTag("txt_discovery_lets_find")
-                                                    .padding(top = 4.dp),
-                                                text = stringResource(id = R.string.discovery_lets_find),
-                                                color = MaterialTheme.appColors.textPrimary,
-                                                style = MaterialTheme.appTypography.titleSmall
-                                            )
-                                            Spacer(modifier = Modifier.height(14.dp))
-                                        }
-                                    }
-                                    items(state.courses) { course ->
-                                        DiscoveryCourseItem(
-                                            apiHostUrl = apiHostUrl,
-                                            course = course,
-                                            windowSize = windowSize,
-                                            onClick = {
-                                                onItemClick(course)
-                                            }
-                                        )
-                                        Divider()
-                                    }
-                                    item {
-                                        if (canLoadMore) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 16.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                CircularProgressIndicator(color = MaterialTheme.appColors.primary)
-                                            }
-                                        }
-                                    }
-                                }
-                                if (scrollState.shouldLoadMore(
-                                        firstVisibleIndex,
-                                        LOAD_MORE_THRESHOLD
-                                    )
-                                ) {
-                                    paginationCallback()
-                                }
-                            }
-                        }
-                    }
-                    PullRefreshIndicator(
-                        refreshing,
-                        pullRefreshState,
-                        Modifier.align(Alignment.TopCenter)
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.BottomCenter)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        if (!isInternetConnectionShown && !hasInternetConnection) {
-                            OfflineModeDialog(
-                                Modifier
-                                    .fillMaxWidth(),
-                                onDismissCLick = {
-                                    isInternetConnectionShown = true
-                                },
-                                onReloadClick = {
-                                    isInternetConnectionShown = true
-                                    onReloadClick()
-                                }
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = brand_green,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Text(
+                            text = "Buscar cursos...",
+                            style = TextStyle(
+                                fontFamily = ttRoundsFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 13.sp,
+                                color = Color(0xFF9A9590),
+                            ),
+                        )
                     }
                 }
             }
@@ -434,14 +584,13 @@ internal fun DiscoveryScreen(
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun CourseItemPreview() {
     OpenEdXTheme {
         DiscoveryCourseItem(
             apiHostUrl = "",
             course = mockCourse,
-            windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
+            accentColor = Color(0xFF2B6959),
             onClick = {}
         )
     }
@@ -489,7 +638,6 @@ private fun DiscoveryScreenPreview() {
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, device = Devices.NEXUS_9)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.NEXUS_9)
 @Composable
 private fun DiscoveryScreenTabletPreview() {
     OpenEdXTheme {
@@ -497,9 +645,6 @@ private fun DiscoveryScreenTabletPreview() {
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
             state = DiscoveryUIState.Courses(
                 listOf(
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
                     mockCourse,
                     mockCourse,
                     mockCourse,

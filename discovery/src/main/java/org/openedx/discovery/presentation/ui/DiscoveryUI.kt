@@ -10,23 +10,25 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -34,21 +36,27 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import org.openedx.core.domain.model.Media
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.theme.brand_green
+import org.openedx.core.ui.theme.ttRoundsCompressedMedium
+import org.openedx.core.ui.theme.ttRoundsFamily
 import org.openedx.discovery.R
 import org.openedx.discovery.domain.model.Course
 import org.openedx.foundation.extension.toImageLink
 import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.rememberWindowSize
-import org.openedx.foundation.presentation.windowSizeValue
 import org.openedx.core.R as сoreR
 
 @Composable
@@ -89,70 +97,103 @@ fun ImageHeader(
 fun DiscoveryCourseItem(
     apiHostUrl: String,
     course: Course,
-    windowSize: WindowSize,
+    accentColor: Color = brand_green,
     onClick: (String) -> Unit,
 ) {
-    val imageWidth by remember(key1 = windowSize) {
-        mutableStateOf(
-            windowSize.windowSizeValue(
-                expanded = 170.dp,
-                compact = 105.dp
-            )
-        )
-    }
+    val context = LocalContext.current
 
     Surface(
         modifier = Modifier
             .testTag("btn_course_card")
             .fillMaxWidth()
-            .height(140.dp)
-            .clickable { onClick(course.courseId) }
-            .background(MaterialTheme.appColors.background),
+            .clickable { onClick(course.courseId) },
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        elevation = 2.dp,
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.appColors.background),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(course.media.courseImage?.uri?.toImageLink(apiHostUrl) ?: "")
-                    .error(сoreR.drawable.core_no_image_course)
-                    .placeholder(сoreR.drawable.core_no_image_course)
-                    .build(),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .width(imageWidth)
-                    .height(105.dp)
-                    .clip(MaterialTheme.appShapes.courseImageShape)
-            )
-            Column(
+        Column {
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(105.dp),
+                    .height(3.dp)
+                    .background(accentColor),
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(96.dp),
             ) {
-                Text(
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(course.media.courseImage?.uri?.toImageLink(apiHostUrl) ?: "")
+                        .error(сoreR.drawable.core_no_image_course)
+                        .placeholder(сoreR.drawable.core_no_image_course)
+                        .build(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .testTag("txt_course_org")
-                        .padding(top = 12.dp),
-                    text = course.org,
-                    color = MaterialTheme.appColors.textFieldHint,
-                    style = MaterialTheme.appTypography.labelMedium
+                        .width(96.dp)
+                        .fillMaxHeight(),
                 )
-                Text(
+                Column(
                     modifier = Modifier
-                        .testTag("txt_course_title")
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    text = course.name,
-                    color = MaterialTheme.appColors.textPrimary,
-                    style = MaterialTheme.appTypography.titleSmall,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
-                )
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        modifier = Modifier.testTag("txt_course_org"),
+                        text = course.org,
+                        style = TextStyle(
+                            fontFamily = ttRoundsFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 9.sp,
+                            color = Color(0xFF9A9590),
+                            letterSpacing = 0.3.sp,
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        modifier = Modifier
+                            .testTag("txt_course_title")
+                            .fillMaxWidth(),
+                        text = course.name,
+                        style = TextStyle(
+                            fontFamily = ttRoundsCompressedMedium,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
+                            color = Color(0xFF1C1B18),
+                            letterSpacing = (-0.2).sp,
+                            lineHeight = 18.sp,
+                        ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (course.isEnrolled) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(5.dp)
+                                    .clip(CircleShape)
+                                    .background(brand_green),
+                            )
+                            Text(
+                                text = "Inscrito",
+                                style = TextStyle(
+                                    fontFamily = ttRoundsFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 9.sp,
+                                    color = brand_green,
+                                ),
+                            )
+                        }
+                    }
+                }
             }
         }
     }
