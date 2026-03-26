@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -100,7 +102,6 @@ import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.brand_cream
-import org.openedx.core.ui.theme.brand_cream_strong
 import org.openedx.core.ui.theme.brand_green
 import org.openedx.core.ui.theme.brand_guinda
 import org.openedx.core.ui.theme.ttRoundsCompressedMedium
@@ -146,6 +147,7 @@ fun DashboardGalleryView(fragmentManager: FragmentManager) {
         uiState = uiState,
         updating = updating,
         apiHostUrl = viewModel.apiHostUrl,
+        userName = viewModel.userName,
         hasInternetConnection = viewModel.hasInternetConnection,
         onAction = { action ->
             when (action) {
@@ -177,6 +179,7 @@ private fun DashboardGalleryView(
     uiState: DashboardGalleryUIState,
     updating: Boolean,
     apiHostUrl: String,
+    userName: String,
     onAction: (DashboardGalleryScreenAction) -> Unit,
     hasInternetConnection: Boolean,
 ) {
@@ -208,7 +211,7 @@ private fun DashboardGalleryView(
             ) {
                 // ── Hero verde ───────────────────────────────────────────────
                 val courses = (uiState as? DashboardGalleryUIState.Courses)?.userCourses
-                DashboardHero(userCourses = courses)
+                DashboardHero(userCourses = courses, userName = userName)
 
                 // ── Tarjeta crema flotante ───────────────────────────────────
                 Surface(
@@ -298,24 +301,27 @@ private fun DashboardGalleryView(
 
 // ── Hero header ───────────────────────────────────────────────────────────────
 @Composable
-private fun DashboardHero(userCourses: CourseEnrollments?) {
-    val allCourses = buildList {
-        userCourses?.primary?.let { add(it) }
-        userCourses?.enrollments?.courses?.let { addAll(it) }
+private fun DashboardHero(userCourses: CourseEnrollments?, userName: String) {
+    val (totalCount, inProgressCount, notStartedCount) = remember(userCourses) {
+        val all = buildList {
+            userCourses?.primary?.let { add(it) }
+            userCourses?.enrollments?.courses?.let { addAll(it) }
+        }
+        Triple(
+            all.size,
+            all.count { it.progress.value in 0.01f..0.99f },
+            all.count { it.progress.value == 0f },
+        )
     }
-    val totalCount = allCourses.size
-    val inProgressCount = allCourses.count { it.progress.value in 0.01f..0.99f }
-    val notStartedCount = allCourses.count { it.progress.value == 0f }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp),
+            .heightIn(min = 200.dp),
     ) {
-        // Fondo gradiente verde
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .matchParentSize()
                 .background(
                     Brush.linearGradient(
                         colors = heroGradient,
@@ -325,7 +331,6 @@ private fun DashboardHero(userCourses: CourseEnrollments?) {
                 ),
         )
 
-        // Barra guinda institucional
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -333,7 +338,6 @@ private fun DashboardHero(userCourses: CourseEnrollments?) {
                 .background(brand_guinda),
         )
 
-        // Círculos decorativos
         Box(
             modifier = Modifier
                 .size(210.dp)
@@ -356,15 +360,13 @@ private fun DashboardHero(userCourses: CourseEnrollments?) {
                 .border(13.dp, Color.White.copy(alpha = 0.07f), CircleShape),
         )
 
-        // Contenido del hero
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(horizontal = 20.dp)
-                .padding(top = 24.dp, bottom = 20.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
+                .padding(top = 24.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Fila: saludo + avatar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -383,7 +385,7 @@ private fun DashboardHero(userCourses: CourseEnrollments?) {
                         ),
                     )
                     Text(
-                        text = "¡Hola!",
+                        text = if (userName.isNotEmpty()) "¡Hola, $userName!" else "¡Hola!",
                         style = TextStyle(
                             fontFamily = ttRoundsCompressedMedium,
                             fontWeight = FontWeight.Medium,
@@ -391,6 +393,8 @@ private fun DashboardHero(userCourses: CourseEnrollments?) {
                             color = Color.White,
                             letterSpacing = (-0.3).sp,
                         ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         text = "Continúa donde lo dejaste",
@@ -403,7 +407,6 @@ private fun DashboardHero(userCourses: CourseEnrollments?) {
                     )
                 }
 
-                // Botón avatar
                 Box(
                     modifier = Modifier
                         .size(44.dp)
@@ -421,7 +424,6 @@ private fun DashboardHero(userCourses: CourseEnrollments?) {
                 }
             }
 
-            // Pills de estadísticas
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (totalCount > 0) {
                     StatPill(
@@ -539,7 +541,6 @@ private fun UserCourses(
     resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String) -> Unit,
 ) {
     Column(modifier = modifier) {
-        // Curso primario
         userCourses.primary?.let { primary ->
             SectionHeader(title = "Continuar aprendiendo")
             PrimaryCourseCard(
@@ -553,7 +554,6 @@ private fun UserCourses(
             )
         }
 
-        // Cursos secundarios (carrusel)
         val secondary = userCourses.enrollments.courses.take(MOBILE_COURSE_LIST_ITEM_COUNT)
         if (secondary.isNotEmpty()) {
             val totalCount = secondary.size + (if (userCourses.primary != null) 1 else 0)
@@ -566,11 +566,11 @@ private fun UserCourses(
                 contentPadding = PaddingValues(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(secondary) { course ->
+                itemsIndexed(secondary) { index, course ->
                     CourseCarouselCard(
                         course = course,
                         apiHostUrl = apiHostUrl,
-                        accentColor = accentColors[secondary.indexOf(course) % accentColors.size],
+                        accentColor = accentColors[index % accentColors.size],
                         onClick = { openCourse(course) },
                     )
                 }
@@ -601,20 +601,11 @@ private fun PrimaryCourseCard(
         elevation = 4.dp,
     ) {
         Column {
-            // Barra acento guinda
-            Box(
+            // ── ACCENT BLOCK: thumbnail + info ───────────────────────────────
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(4.dp)
-                    .background(brand_guinda),
-            )
-
-            // Imagen con overlays
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(900f / 992f)
-                    .clip(RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp)),
+                    .height(140.dp),
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
@@ -624,215 +615,133 @@ private fun PrimaryCourseCard(
                         .build(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .width(140.dp)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(topStart = 20.dp, bottomStart = 0.dp)),
                 )
 
-                // Overlay oscuro en la parte inferior
-                Box(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp)
-                        .align(Alignment.BottomCenter)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color(0xB50F1E19)),
-                            )
-                        ),
-                )
-
-                // Badge organización (top-left)
-                Box(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.TopStart)
-                        .clip(RoundedCornerShape(50.dp))
-                        .background(Color.White.copy(alpha = 0.14f))
-                        .border(1.dp, Color.White.copy(alpha = 0.28f), RoundedCornerShape(50.dp))
-                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(horizontal = 14.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        text = course.course.org.uppercase(),
+                        text = course.course.org,
                         style = TextStyle(
                             fontFamily = ttRoundsFamily,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 10.sp,
-                            color = Color.White,
-                            letterSpacing = 0.6.sp,
-                        ),
-                    )
-                }
-
-                // Etiqueta unidad actual (bottom-left)
-                course.courseStatus?.lastVisitedUnitDisplayName
-                    ?.takeIf { it.isNotEmpty() }
-                    ?.let { unitName ->
-                        Text(
-                            text = unitName,
-                            modifier = Modifier
-                                .padding(start = 16.dp, bottom = 14.dp)
-                                .align(Alignment.BottomStart),
-                            style = TextStyle(
-                                fontFamily = ttRoundsCompressedThinItalic,
-                                fontWeight = FontWeight.Thin,
-                                fontStyle = FontStyle.Italic,
-                                fontSize = 11.sp,
-                                color = Color.White.copy(alpha = 0.75f),
-                                letterSpacing = 0.2.sp,
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-
-                // Píldora de progreso (bottom-right)
-                Row(
-                    modifier = Modifier
-                        .padding(end = 14.dp, bottom = 14.dp)
-                        .align(Alignment.BottomEnd)
-                        .clip(RoundedCornerShape(50.dp))
-                        .background(Color.Black.copy(alpha = 0.5f))
-                        .padding(horizontal = 10.dp, vertical = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(7.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .width(48.dp)
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(Color.White.copy(alpha = 0.22f)),
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(progressValue)
-                                .height(4.dp)
-                                .background(Color(0xFF6ECFB0)),
-                        )
-                    }
-                    Text(
-                        text = "${(progressValue * 100).toInt()}%",
-                        style = TextStyle(
-                            fontFamily = ttRoundsFamily,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            color = Color.White,
-                        ),
-                    )
-                }
-            }
-
-            // Cuerpo de la tarjeta
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 14.dp, bottom = 16.dp),
-            ) {
-                // Chip asignación pendiente
-                if (hasPastAssignment) {
-                    val pastAssignments = course.courseAssignments!!.pastAssignments!!
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(50.dp))
-                            .background(Color(0xFF611232).copy(alpha = 0.08f))
-                            .padding(horizontal = 10.dp, vertical = 5.dp)
-                            .clickable {
-                                if (pastAssignments.size == 1) {
-                                    resumeBlockId(course, pastAssignments.first().blockId)
-                                } else {
-                                    navigateToDates(course)
-                                }
-                            },
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(brand_guinda),
-                        )
-                        Text(
-                            text = pluralStringResource(
-                                R.plurals.dashboard_past_due_assignment,
-                                pastAssignments.size,
-                                pastAssignments.size,
-                            ),
-                            style = TextStyle(
-                                fontFamily = ttRoundsFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 11.sp,
-                                color = brand_guinda,
-                            ),
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                }
-
-                // Título del curso
-                Text(
-                    text = course.course.name,
-                    style = TextStyle(
-                        fontFamily = ttRoundsCompressedMedium,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 18.sp,
-                        color = Color(0xFF1C1B18),
-                        letterSpacing = (-0.2).sp,
-                        lineHeight = 22.sp,
-                    ),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Fila meta: ritmo + fecha fin
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    Text(
-                        text = if (course.course.isSelfPaced) "A tu ritmo" else "Con fechas",
-                        style = TextStyle(
-                            fontFamily = ttRoundsFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 11.sp,
+                            fontSize = 9.sp,
                             color = Color(0xFF9A9590),
+                            letterSpacing = 0.3.sp,
                         ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
+
                     Text(
-                        text = "·",
-                        style = TextStyle(fontSize = 14.sp, color = brand_cream_strong),
-                    )
-                    Text(
-                        text = TimeUtils.getCourseFormattedDate(
-                            context,
-                            Date(),
-                            course.auditAccessExpires,
-                            course.course.start,
-                            course.course.end,
-                            course.course.startType,
-                            course.course.startDisplay,
+                        text = course.course.name,
+                        style = TextStyle(
+                            fontFamily = ttRoundsCompressedMedium,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
+                            color = Color(0xFF1C1B18),
+                            letterSpacing = (-0.2).sp,
+                            lineHeight = 18.sp,
                         ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+
+                    Text(
+                        text = buildString {
+                            append(if (course.course.isSelfPaced) "A tu ritmo" else "Con fechas")
+                            append("  ·  ")
+                            append(
+                                TimeUtils.getCourseFormattedDate(
+                                    context, Date(),
+                                    course.auditAccessExpires,
+                                    course.course.start, course.course.end,
+                                    course.course.startType, course.course.startDisplay,
+                                )
+                            )
+                        },
                         style = TextStyle(
                             fontFamily = ttRoundsFamily,
                             fontWeight = FontWeight.Normal,
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
                             color = Color(0xFF9A9590),
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
+            }
 
-                Spacer(modifier = Modifier.height(14.dp))
+            // ── Franja inferior: progreso + botón ────────────────────────────
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color(0xFFF0EDE8)),
+            )
 
-                // Barra de progreso (gradiente)
+            if (hasPastAssignment) {
+                val pastAssignments = course.courseAssignments!!.pastAssignments!!
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .padding(top = 10.dp)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(brand_guinda.copy(alpha = 0.08f))
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                        .clickable {
+                            if (pastAssignments.size == 1) {
+                                resumeBlockId(course, pastAssignments.first().blockId)
+                            } else {
+                                navigateToDates(course)
+                            }
+                        },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(5.dp)
+                            .clip(CircleShape)
+                            .background(brand_guinda),
+                    )
+                    Text(
+                        text = pluralStringResource(
+                            R.plurals.dashboard_past_due_assignment,
+                            pastAssignments.size,
+                            pastAssignments.size,
+                        ),
+                        style = TextStyle(
+                            fontFamily = ttRoundsFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 10.sp,
+                            color = brand_guinda,
+                        ),
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp)
+                    .padding(top = 10.dp, bottom = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp))
+                        .weight(1f)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
                         .background(Color(0xFFE5E0D8)),
                 ) {
                     Box(
@@ -846,15 +755,20 @@ private fun PrimaryCourseCard(
                             ),
                     )
                 }
+                Text(
+                    text = "${(progressValue * 100).toInt()}%",
+                    style = TextStyle(
+                        fontFamily = ttRoundsFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 10.sp,
+                        color = Color(0xFF5A5650),
+                    ),
+                )
 
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Botón continuar
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .clip(RoundedCornerShape(14.dp))
+                        .height(34.dp)
+                        .clip(RoundedCornerShape(9.dp))
                         .background(brand_green)
                         .clickable {
                             if (course.courseStatus == null) {
@@ -865,18 +779,19 @@ private fun PrimaryCourseCard(
                                     course.courseStatus?.lastVisitedBlockId ?: "",
                                 )
                             }
-                        },
+                        }
+                        .padding(horizontal = 14.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
                             contentDescription = null,
                             tint = Color.White,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(12.dp),
                         )
                         Text(
                             text = if (course.courseStatus == null) {
@@ -887,9 +802,8 @@ private fun PrimaryCourseCard(
                             style = TextStyle(
                                 fontFamily = ttRoundsFamily,
                                 fontWeight = FontWeight.Medium,
-                                fontSize = 14.sp,
+                                fontSize = 11.sp,
                                 color = Color.White,
-                                letterSpacing = 0.2.sp,
                             ),
                         )
                     }
@@ -929,7 +843,6 @@ private fun CourseCarouselCard(
         elevation = 2.dp,
     ) {
         Column {
-            // Barra acento superior
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -937,7 +850,6 @@ private fun CourseCarouselCard(
                     .background(accentColor),
             )
 
-            // Imagen con ring de progreso
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -954,7 +866,6 @@ private fun CourseCarouselCard(
                     modifier = Modifier.fillMaxSize(),
                 )
 
-                // Ring de progreso (bottom-right)
                 ProgressRing(
                     progress = progressValue,
                     modifier = Modifier
@@ -964,7 +875,6 @@ private fun CourseCarouselCard(
                 )
             }
 
-            // Cuerpo
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1141,7 +1051,7 @@ private val mockCourse = EnrolledCourse(
     certificate = Certificate(""),
     mode = "mode",
     isActive = true,
-    progress = Progress(0.35f, 0),
+    progress = Progress(35, 100),
     courseStatus = CourseStatus("", emptyList(), "", "Unidad: Aprendizaje colaborativo"),
     courseAssignments = CourseAssignments(
         pastAssignments = listOf(
@@ -1179,15 +1089,15 @@ private val mockCourse = EnrolledCourse(
 )
 
 private val mockCourse2 = mockCourse.copy(
-    progress = Progress(0.25f, 0),
+    progress = Progress(25, 100),
     course = mockCourse.course.copy(name = "Búsqueda en Internet para Universidad", org = "UNAM"),
 )
 private val mockCourse3 = mockCourse.copy(
-    progress = Progress(0.8f, 0),
+    progress = Progress(80, 100),
     course = mockCourse.course.copy(name = "Alimentación saludable y sostenible", org = "INSP"),
 )
 private val mockCourse4 = mockCourse.copy(
-    progress = Progress(0f, 0),
+    progress = Progress(0, 100),
     courseStatus = null,
     course = mockCourse.course.copy(name = "Ciberseguridad para todos", org = "CERT-MX"),
 )
@@ -1208,6 +1118,7 @@ private fun DashboardGalleryViewPreview() {
         DashboardGalleryView(
             uiState = DashboardGalleryUIState.Courses(mockUserCourses, true),
             apiHostUrl = "",
+            userName = "Diego",
             uiMessage = null,
             updating = false,
             hasInternetConnection = true,
@@ -1223,6 +1134,7 @@ private fun DashboardEmptyPreview() {
         DashboardGalleryView(
             uiState = DashboardGalleryUIState.Empty,
             apiHostUrl = "",
+            userName = "Diego",
             uiMessage = null,
             updating = false,
             hasInternetConnection = true,

@@ -40,6 +40,7 @@ class DashboardGalleryViewModel(
 ) : BaseViewModel() {
 
     val apiHostUrl get() = config.getApiHostURL()
+    val userName get() = corePreferences.user?.name.orEmpty()
 
     private val _uiState =
         MutableStateFlow<DashboardGalleryUIState>(DashboardGalleryUIState.Loading)
