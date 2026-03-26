@@ -3,7 +3,7 @@ SSO_URL: 'https://dev.mexicox.gob.mx'
 SSO_FINISHED_URL:  'https://dev.mexicox.gob.mx'
 ENVIRONMENT_DISPLAY_NAME: 'Cursos'
 FEEDBACK_EMAIL_ADDRESS: 'support@example.com'
-OAUTH_CLIENT_ID: '${APRENDE_OAUTH_CLIENT_ID}'
+OAUTH_CLIENT_ID: 'zrxzez1eCwVzjNNHzuerPmt5uso7guriA2TpqDiN'
 
 # Keep empty to hide setting
 AGREEMENT_URLS:
@@ -44,7 +44,7 @@ BRAZE:
 
 GOOGLE:
   ENABLED: true
-  CLIENT_ID: '${GOOGLE_CLIENT_ID}'
+  CLIENT_ID: '12345678909876523'
 
 MICROSOFT:
   ENABLED: false
