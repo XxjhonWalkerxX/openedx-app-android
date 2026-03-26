@@ -54,10 +54,27 @@ class ConfigHelper {
             def configFile = new File(configDir + "/" + file)
             if (configFile.exists()) {
                 def config = new Yaml().load(configFile.newInputStream())
+                resolveEnvVars(config)
                 androidConfigs.putAll(config)
             }
         }
         return androidConfigs
+    }
+
+    def resolveEnvVars(Map config) {
+        config.each { key, value ->
+            if (value instanceof String) {
+                config[key] = value.replaceAll(/\$\{([^}]+)\}/) { match, varName ->
+                    def envValue = System.getenv(varName as String)
+                    if (envValue == null) {
+                        println("WARNING: env var '$varName' not set — using empty string")
+                    }
+                    envValue ?: ''
+                }
+            } else if (value instanceof Map) {
+                resolveEnvVars(value as Map)
+            }
+        }
     }
 
     def generateConfigJson() {

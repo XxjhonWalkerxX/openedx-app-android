@@ -2,40 +2,42 @@ package org.openedx.auth.presentation.signin.compose
 
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Divider
 import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.rememberScaffoldState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,49 +47,48 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.openedx.auth.R
 import org.openedx.auth.presentation.signin.AuthEvent
 import org.openedx.auth.presentation.signin.SignInUIState
-import org.openedx.auth.presentation.ui.LoginTextField
 import org.openedx.auth.presentation.ui.PasswordVisibilityIcon
 import org.openedx.core.extension.TextConverter
-import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.HyperlinkText
-import org.openedx.core.ui.OpenEdXButton
-import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.noRippleClickable
 import org.openedx.core.ui.theme.OpenEdXTheme
-import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.theme.appShapes
-import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.theme.compose.SignInLogoView
-import org.openedx.core.ui.theme.llave_mx_primary
+import org.openedx.core.ui.theme.brand_cream
+import org.openedx.core.ui.theme.brand_green
+import org.openedx.core.ui.theme.brand_guinda
 import org.openedx.foundation.presentation.UIMessage
 import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.WindowType
 import org.openedx.foundation.presentation.windowSizeValue
+import androidx.compose.material.rememberScaffoldState
 import org.openedx.core.R as coreR
+import org.openedx.auth.R as AuthR
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -98,104 +99,151 @@ internal fun LoginScreen(
     onEvent: (AuthEvent) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
-    val scrollState = rememberScrollState()
 
-    Scaffold(
-        scaffoldState = scaffoldState,
-        modifier = Modifier
-            .semantics {
-                testTagsAsResourceId = true
-            }
-            .fillMaxSize()
-            .navigationBarsPadding(),
-        backgroundColor = MaterialTheme.appColors.background
-    ) {
-        val contentPaddings by remember {
-            mutableStateOf(
-                windowSize.windowSizeValue(
-                    expanded = Modifier
-                        .widthIn(Dp.Unspecified, 420.dp)
-                        .padding(
-                            top = 32.dp,
-                            bottom = 40.dp
-                        ),
-                    compact = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 28.dp)
-                )
-            )
-        }
-        val buttonWidth by remember(key1 = windowSize) {
-            mutableStateOf(
-                windowSize.windowSizeValue(
-                    expanded = Modifier.widthIn(232.dp, Dp.Unspecified),
-                    compact = Modifier.fillMaxWidth()
-                )
-            )
-        }
+    HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        // ── Fondo verde hero (45% superior) ─────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(fraction = 0.3f)
-                .background(MaterialTheme.appColors.primary)
+                .fillMaxHeight(0.45f)
+                .background(brand_green),
+        ) {
+            // Círculos decorativos
+            Box(modifier = Modifier.size(180.dp).offset(x = 220.dp, y = (-40).dp)
+                .clip(CircleShape).border(28.dp, Color.White.copy(alpha = 0.06f), CircleShape))
+            Box(modifier = Modifier.size(100.dp).offset(x = (-20).dp, y = 200.dp)
+                .clip(CircleShape).border(18.dp, Color.White.copy(alpha = 0.05f), CircleShape))
+        }
+
+        // ── Barra guinda ─────────────────────────────────────────────────
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .background(brand_guinda),
         )
-        HandleUIMessage(
-            uiMessage = uiMessage,
-            scaffoldState = scaffoldState
-        )
-        if (state.isLogistrationEnabled) {
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+        ) {
+            // ── Hero verde: back + logo + slogan ─────────────────────────
             Box(
                 modifier = Modifier
-                    .statusBarsPadding()
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.CenterStart
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 32.dp),
             ) {
-                BackBtn(
-                    modifier = Modifier.padding(end = 16.dp),
-                    tint = Color.White
+                // Botón back
+                if (state.isLogistrationEnabled) {
+                    Box(
+                        modifier = Modifier
+                            .statusBarsPadding()
+                            .padding(start = 8.dp)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.15f))
+                            .clickable { onEvent(AuthEvent.BackClick) },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(top = if (state.isLogistrationEnabled) 32.dp else 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    onEvent(AuthEvent.BackClick)
+                    // Logo @prende.mx en blanco
+                    Image(
+                        painter = painterResource(id = AuthR.drawable.aprende_logo_marquesina),
+                        contentDescription = "Cursos @prende.mx",
+                        modifier = Modifier
+                            .width(140.dp)
+                            .padding(horizontal = 16.dp),
+                        contentScale = ContentScale.Fit,
+                        colorFilter = ColorFilter.tint(Color.White),
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    // Slogan en blanco
+                    Image(
+                        painter = painterResource(id = AuthR.drawable.aprende_slogan),
+                        contentDescription = "La plataforma de cursos en línea",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 40.dp),
+                        contentScale = ContentScale.Fit,
+                        colorFilter = ColorFilter.tint(Color.White),
+                    )
                 }
             }
-        }
-        Column(
-            Modifier.padding(it),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            SignInLogoView()
+
+            // ── Tarjeta crema flotando sobre el verde ─────────────────────
             Surface(
-                color = MaterialTheme.appColors.background,
-                shape = MaterialTheme.appShapes.screenBackgroundShape,
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    .offset(y = (-28).dp),
+                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+                color = brand_cream,
+                elevation = 0.dp,
             ) {
-                Box(contentAlignment = Alignment.TopCenter) {
-                    Column(
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    // Handle
+                    Box(
                         modifier = Modifier
-                            .background(MaterialTheme.appColors.background)
-                            .verticalScroll(scrollState)
-                            .displayCutoutForLandscape()
-                            .then(contentPaddings),
-                    ) {
-                        AuthForm(
-                            buttonWidth,
-                            state,
-                            onEvent,
+                            .padding(top = 12.dp)
+                            .size(width = 36.dp, height = 4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(Color(0xFFCCC8C0)),
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    val contentPaddings by remember {
+                        mutableStateOf(
+                            windowSize.windowSizeValue(
+                                expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
+                                compact = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            )
                         )
+                    }
+                    val buttonWidth by remember(windowSize) {
+                        mutableStateOf(
+                            windowSize.windowSizeValue(
+                                expanded = Modifier.widthIn(232.dp, Dp.Unspecified),
+                                compact = Modifier.fillMaxWidth(),
+                            )
+                        )
+                    }
+
+                    Column(modifier = contentPaddings) {
+                        AuthForm(buttonWidth, state, onEvent)
                         state.agreement?.let {
-                            Spacer(modifier = Modifier.height(24.dp))
-                            val linkedText =
-                                TextConverter.htmlTextToLinkedText(state.agreement.label)
+                            Spacer(modifier = Modifier.height(20.dp))
+                            val linkedText = TextConverter.htmlTextToLinkedText(state.agreement.label)
                             HyperlinkText(
                                 modifier = Modifier.testTag("txt_${state.agreement.name}"),
                                 fullText = linkedText.text,
                                 hyperLinks = linkedText.links,
-                                linkTextColor = MaterialTheme.appColors.textHyperLink,
+                                linkTextColor = brand_green,
                                 linkTextDecoration = TextDecoration.Underline,
-                                action = { link ->
-                                    onEvent(AuthEvent.OpenLink(linkedText.links, link))
-                                },
+                                action = { link -> onEvent(AuthEvent.OpenLink(linkedText.links, link)) },
                             )
                         }
                     }
@@ -205,6 +253,7 @@ internal fun LoginScreen(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun AuthForm(
     buttonWidth: Modifier,
@@ -216,164 +265,264 @@ private fun AuthForm(
     val keyboardController = LocalSoftwareKeyboardController.current
     var isEmailError by rememberSaveable { mutableStateOf(false) }
     var isPasswordError by rememberSaveable { mutableStateOf(false) }
-    var showTraditionalLogin by rememberSaveable { mutableStateOf(false) }
+    var showTraditionalLogin by rememberSaveable { mutableStateOf(true) }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
 
-        // ── Tarjeta LlaveMX (opción principal) ──────────────────────────
-        Card(
-            shape = MaterialTheme.appShapes.cardShape,
-            elevation = 4.dp,
-            modifier = Modifier.fillMaxWidth()
+        // ── Card LlaveMX ─────────────────────────────────────────────────
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            color = Color.White,
+            elevation = 2.dp,
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = stringResource(id = R.string.llavemx_card_title),
-                    color = MaterialTheme.appColors.textPrimary,
-                    style = MaterialTheme.appTypography.titleMedium,
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF3D3A36),
+                    ),
                     textAlign = TextAlign.Center,
                 )
-                Spacer(modifier = Modifier.height(24.dp))
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Logo LlaveMX correcto (ícono dorado + texto guinda)
                 Image(
                     painter = painterResource(id = R.drawable.ic_llavemx_logo),
                     contentDescription = "Llave MX",
                     modifier = Modifier
-                        .width(160.dp)
-                        .height(108.dp),
+                        .width(180.dp)
+                        .height(56.dp),
                     contentScale = ContentScale.Fit,
                 )
-                Spacer(modifier = Modifier.height(28.dp))
+
+                Spacer(modifier = Modifier.height(24.dp))
+
                 if (state.showProgress) {
-                    CircularProgressIndicator(color = llave_mx_primary)
+                    CircularProgressIndicator(color = brand_guinda)
                 } else {
-                    OpenEdXButton(
-                        modifier = buttonWidth.testTag("btn_llavemx"),
-                        text = stringResource(id = R.string.llavemx_sign_in_button),
-                        textColor = Color.White,
-                        backgroundColor = llave_mx_primary,
-                        onClick = {
-                            keyboardController?.hide()
-                            onEvent(AuthEvent.LlaveMxSignIn)
-                        }
-                    )
+                    Box(
+                        modifier = buttonWidth
+                            .testTag("btn_llavemx")
+                            .height(52.dp)
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(brand_guinda)
+                            .clickable {
+                                keyboardController?.hide()
+                                onEvent(AuthEvent.LlaveMxSignIn)
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.llavemx_sign_in_button),
+                            style = TextStyle(
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White,
+                            ),
+                        )
+                    }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(28.dp))
-
-        // ── Banner de acceso tradicional (opción secundaria) ────────────
-        androidx.compose.material.Surface(
+        // ── Acceso con correo (colapsable) ────────────────────────────────
+        Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.appShapes.cardShape,
-            border = BorderStroke(1.dp, MaterialTheme.appColors.divider),
-            color = MaterialTheme.appColors.background,
+            shape = RoundedCornerShape(20.dp),
+            color = Color.White,
+            elevation = 1.dp,
         ) {
             Column(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .animateContentSize()
+                    .fillMaxWidth()
+                    .animateContentSize(),
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 14.dp)
-                        .noRippleClickable { showTraditionalLogin = !showTraditionalLogin },
-                    verticalAlignment = Alignment.CenterVertically
+                        .noRippleClickable { showTraditionalLogin = !showTraditionalLogin }
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = stringResource(id = R.string.llavemx_traditional_login_label),
-                        style = MaterialTheme.appTypography.bodySmall,
-                        color = MaterialTheme.appColors.textSecondary,
+                        style = TextStyle(fontSize = 13.sp, color = Color(0xFF7A7060)),
                         modifier = Modifier.weight(1f),
                     )
                     Icon(
                         imageVector = if (showTraditionalLogin) Icons.Filled.KeyboardArrowUp
                                       else Icons.Filled.KeyboardArrowDown,
                         contentDescription = null,
-                        tint = MaterialTheme.appColors.textSecondary,
+                        tint = Color(0xFF9A9590),
+                        modifier = Modifier.size(20.dp),
                     )
                 }
 
                 if (showTraditionalLogin) {
-                    if (!state.isBrowserLoginEnabled) {
-                        LoginTextField(
-                            modifier = Modifier.fillMaxWidth(),
-                            title = stringResource(id = R.string.auth_email_username),
-                            description = stringResource(id = R.string.auth_enter_email_username),
-                            onValueChanged = {
-                                login = it
-                                isEmailError = false
-                            },
-                            isError = isEmailError,
-                            errorMessages = stringResource(id = R.string.auth_error_empty_username_email),
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        PasswordTextField(
-                            modifier = Modifier.fillMaxWidth(),
-                            onValueChanged = {
-                                password = it
-                                isPasswordError = false
-                            },
-                            onPressDone = {
-                                keyboardController?.hide()
-                                if (login.isNotEmpty() && password.isNotEmpty()) {
-                                    onEvent(AuthEvent.SignIn(login = login, password = password))
-                                } else {
-                                    isEmailError = login.isEmpty()
-                                    isPasswordError = password.isEmpty()
-                                }
-                            },
-                            isError = isPasswordError,
-                        )
-                    }
-                    Row(
+                    Divider(color = Color(0xFFF0EDE8), thickness = 1.dp)
+
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.End,
+                            .padding(horizontal = 20.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
+                        if (!state.isBrowserLoginEnabled) {
+                            // Campo correo/usuario
+                            BrandTextField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("tf_login"),
+                                label = stringResource(id = R.string.auth_email_username),
+                                placeholder = stringResource(id = R.string.auth_enter_email_username),
+                                isError = isEmailError,
+                                errorText = stringResource(id = R.string.auth_error_empty_username_email),
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                                onValueChanged = { login = it; isEmailError = false },
+                            )
+
+                            // Campo contraseña
+                            BrandPasswordField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("tf_password"),
+                                isError = isPasswordError,
+                                onValueChanged = { password = it; isPasswordError = false },
+                                onPressDone = {
+                                    keyboardController?.hide()
+                                    if (login.isNotEmpty() && password.isNotEmpty()) {
+                                        onEvent(AuthEvent.SignIn(login, password))
+                                    } else {
+                                        isEmailError = login.isEmpty()
+                                        isPasswordError = password.isEmpty()
+                                    }
+                                },
+                            )
+                        }
+
+                        // ¿Olvidaste tu contraseña?
                         Text(
                             modifier = Modifier
+                                .align(Alignment.End)
                                 .testTag("txt_forgot_password")
                                 .noRippleClickable { onEvent(AuthEvent.ForgotPasswordClick) },
                             text = stringResource(id = R.string.auth_forgot_password),
-                            color = MaterialTheme.appColors.infoVariant,
-                            style = MaterialTheme.appTypography.labelLarge,
+                            style = TextStyle(
+                                fontSize = 13.sp,
+                                color = brand_green,
+                                fontWeight = FontWeight.Medium,
+                            ),
                         )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    OpenEdXButton(
-                        modifier = buttonWidth.testTag("btn_sign_in"),
-                        text = stringResource(id = coreR.string.core_sign_in),
-                        textColor = MaterialTheme.appColors.primaryButtonText,
-                        backgroundColor = MaterialTheme.appColors.secondaryButtonBackground,
-                        onClick = {
-                            if (state.isBrowserLoginEnabled) {
-                                onEvent(AuthEvent.SignInBrowser)
-                            } else {
-                                keyboardController?.hide()
-                                if (login.isNotEmpty() && password.isNotEmpty()) {
-                                    onEvent(AuthEvent.SignIn(login = login, password = password))
-                                } else {
-                                    isEmailError = login.isEmpty()
-                                    isPasswordError = password.isEmpty()
-                                }
-                            }
+
+                        // Botón Inicia sesión
+                        Box(
+                            modifier = buttonWidth
+                                .testTag("btn_sign_in")
+                                .height(52.dp)
+                                .clip(RoundedCornerShape(50.dp))
+                                .background(brand_green)
+                                .clickable {
+                                    if (state.isBrowserLoginEnabled) {
+                                        onEvent(AuthEvent.SignInBrowser)
+                                    } else {
+                                        keyboardController?.hide()
+                                        if (login.isNotEmpty() && password.isNotEmpty()) {
+                                            onEvent(AuthEvent.SignIn(login, password))
+                                        } else {
+                                            isEmailError = login.isEmpty()
+                                            isPasswordError = password.isEmpty()
+                                        }
+                                    }
+                                },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = stringResource(id = coreR.string.core_sign_in),
+                                style = TextStyle(
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.White,
+                                ),
+                            )
                         }
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    }
                 }
             }
         }
     }
 }
 
+// ── Campos de texto con estilo de marca ───────────────────────────────────────
 @Composable
-private fun PasswordTextField(
+private fun BrandTextField(
+    modifier: Modifier = Modifier,
+    label: String,
+    placeholder: String,
+    isError: Boolean,
+    errorText: String,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    onValueChanged: (String) -> Unit,
+) {
+    var textFieldValue by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(""))
+    }
+
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            style = TextStyle(
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = brand_green,
+                letterSpacing = 0.3.sp,
+            ),
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = textFieldValue,
+            onValueChange = { textFieldValue = it; onValueChanged(it.text.trim()) },
+            placeholder = {
+                Text(text = placeholder, style = TextStyle(fontSize = 14.sp, color = Color(0xFFB0AB9F)))
+            },
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                textColor = Color(0xFF1C1C1C),
+                backgroundColor = Color(0xFFF8F6F2),
+                unfocusedBorderColor = Color(0xFFDDD9D2),
+                focusedBorderColor = brand_green,
+                cursorColor = brand_green,
+                errorBorderColor = Color(0xFFD94F4F),
+            ),
+            shape = RoundedCornerShape(12.dp),
+            keyboardOptions = keyboardOptions,
+            isError = isError,
+            singleLine = true,
+        )
+        if (isError) {
+            Text(
+                text = errorText,
+                style = TextStyle(fontSize = 11.sp, color = Color(0xFFD94F4F)),
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun BrandPasswordField(
     modifier: Modifier = Modifier,
     isError: Boolean,
     onValueChanged: (String) -> Unit,
@@ -385,77 +534,60 @@ private fun PasswordTextField(
     var isPasswordVisible by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
-    Text(
-        modifier = Modifier
-            .testTag("txt_password_label")
-            .fillMaxWidth(),
-        text = stringResource(id = coreR.string.core_password),
-        color = MaterialTheme.appColors.textPrimary,
-        style = MaterialTheme.appTypography.labelLarge
-    )
-
-    Spacer(modifier = Modifier.height(8.dp))
-
-    OutlinedTextField(
-        modifier = modifier.testTag("tf_password"),
-        value = passwordTextFieldValue,
-        onValueChange = {
-            passwordTextFieldValue = it
-            onValueChanged(it.text.trim())
-        },
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            textColor = MaterialTheme.appColors.textFieldText,
-            backgroundColor = MaterialTheme.appColors.textFieldBackground,
-            unfocusedBorderColor = MaterialTheme.appColors.textFieldBorder,
-            cursorColor = MaterialTheme.appColors.textFieldText,
-        ),
-        shape = MaterialTheme.appShapes.textFieldShape,
-        placeholder = {
-            Text(
-                modifier = Modifier.testTag("txt_password_placeholder"),
-                text = stringResource(id = R.string.auth_enter_password),
-                color = MaterialTheme.appColors.textFieldHint,
-                style = MaterialTheme.appTypography.bodyMedium
-            )
-        },
-        trailingIcon = {
-            PasswordVisibilityIcon(
-                isPasswordVisible = isPasswordVisible,
-                onClick = { isPasswordVisible = !isPasswordVisible }
-            )
-        },
-        keyboardOptions = KeyboardOptions.Default.copy(
-            keyboardType = KeyboardType.Password,
-            imeAction = ImeAction.Done
-        ),
-        visualTransformation = if (isPasswordVisible) {
-            VisualTransformation.None
-        } else {
-            PasswordVisualTransformation()
-        },
-        keyboardActions = KeyboardActions {
-            focusManager.clearFocus()
-            onPressDone()
-        },
-        isError = isError,
-        textStyle = MaterialTheme.appTypography.bodyMedium,
-        singleLine = true,
-    )
-    if (isError) {
+    Column(modifier = modifier) {
         Text(
-            modifier = Modifier
-                .testTag("txt_password_error")
-                .fillMaxWidth()
-                .padding(top = 4.dp),
-            text = stringResource(id = R.string.auth_error_empty_password),
-            style = MaterialTheme.appTypography.bodySmall,
-            color = MaterialTheme.appColors.error,
+            text = stringResource(id = coreR.string.core_password),
+            style = TextStyle(
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = brand_green,
+                letterSpacing = 0.3.sp,
+            ),
         )
+        Spacer(modifier = Modifier.height(6.dp))
+        OutlinedTextField(
+            modifier = Modifier.fillMaxWidth().testTag("tf_password"),
+            value = passwordTextFieldValue,
+            onValueChange = { passwordTextFieldValue = it; onValueChanged(it.text.trim()) },
+            placeholder = {
+                Text(
+                    text = stringResource(id = R.string.auth_enter_password),
+                    style = TextStyle(fontSize = 14.sp, color = Color(0xFFB0AB9F)),
+                )
+            },
+            trailingIcon = {
+                PasswordVisibilityIcon(
+                    isPasswordVisible = isPasswordVisible,
+                    onClick = { isPasswordVisible = !isPasswordVisible },
+                )
+            },
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                textColor = Color(0xFF1C1C1C),
+                backgroundColor = Color(0xFFF8F6F2),
+                unfocusedBorderColor = Color(0xFFDDD9D2),
+                focusedBorderColor = brand_green,
+                cursorColor = brand_green,
+                errorBorderColor = Color(0xFFD94F4F),
+            ),
+            shape = RoundedCornerShape(12.dp),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardActions = KeyboardActions { focusManager.clearFocus(); onPressDone() },
+            isError = isError,
+            singleLine = true,
+        )
+        if (isError) {
+            Text(
+                text = stringResource(id = R.string.auth_error_empty_password),
+                style = TextStyle(fontSize = 11.sp, color = Color(0xFFD94F4F)),
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
     }
 }
 
-@Preview(uiMode = UI_MODE_NIGHT_NO)
-@Preview(name = "NEXUS_5_Light", device = Devices.NEXUS_5, uiMode = UI_MODE_NIGHT_NO)
+// ── Previews ──────────────────────────────────────────────────────────────────
+@Preview(uiMode = UI_MODE_NIGHT_NO, showSystemUi = true)
 @Composable
 private fun SignInScreenPreview() {
     OpenEdXTheme {
@@ -468,34 +600,26 @@ private fun SignInScreenPreview() {
     }
 }
 
-@Preview(uiMode = UI_MODE_NIGHT_NO)
-@Preview(name = "NEXUS_5_Light", device = Devices.NEXUS_5, uiMode = UI_MODE_NIGHT_NO)
+@Preview(uiMode = UI_MODE_NIGHT_NO, showSystemUi = true)
 @Composable
-private fun SignInUsingBrowserScreenPreview() {
+private fun SignInExpandedPreview() {
     OpenEdXTheme {
         LoginScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            state = SignInUIState().copy(
-                isBrowserLoginEnabled = true,
-            ),
+            state = SignInUIState().copy(isBrowserLoginEnabled = true),
             uiMessage = null,
             onEvent = {},
         )
     }
 }
 
-@Preview(name = "NEXUS_9_Light", device = Devices.NEXUS_9, uiMode = UI_MODE_NIGHT_NO)
+@Preview(name = "NEXUS_9", device = Devices.NEXUS_9, uiMode = UI_MODE_NIGHT_NO)
 @Composable
-private fun SignInScreenTabletPreview() {
+private fun SignInTabletPreview() {
     OpenEdXTheme {
         LoginScreen(
             windowSize = WindowSize(WindowType.Expanded, WindowType.Expanded),
-            state = SignInUIState().copy(
-                isSocialAuthEnabled = true,
-                isFacebookAuthEnabled = true,
-                isGoogleAuthEnabled = true,
-                isMicrosoftAuthEnabled = true,
-            ),
+            state = SignInUIState(),
             uiMessage = null,
             onEvent = {},
         )

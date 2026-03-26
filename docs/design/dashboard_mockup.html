@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Dashboard — Cursos @prende.mx</title>
+<style>
+
+  /* ── TT Rounds Neue Trial Variable ───────────────────────────────────────── */
+  @font-face {
+    font-family: 'TT Rounds Neue';
+    src: url('file:///opt/tutor/env/build/openedx/themes/tutor-indigo/tutorindigo/templates/indigo/lms/static/fonts/TT_Rounds_Neue_Trial_Variable.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-stretch: 50% 200%;
+  }
+  @font-face {
+    font-family: 'TT Rounds Neue';
+    src: url('file:///opt/tutor/env/build/openedx/themes/tutor-indigo/tutorindigo/templates/indigo/lms/static/fonts/TT_Rounds_Neue_Trial_Variable.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic;
+    font-stretch: 50% 200%;
+  }
+
+  /* ── Jerarquía tipográfica del sistema ───────────────────────────────────── */
+  /* Global/body  → TT Rounds Neue  Regular-Medium (width normal) */
+  /* Plataforma   → TT Rounds Neue  Compressed Medium (wdth 50, weight 500) */
+  /* Decorativo   → TT Rounds Neue  Compressed Thin Italic (wdth 50, weight 100, italic) */
+
+  :root {
+    --font: 'TT Rounds Neue', sans-serif;
+
+    /* Brand palette */
+    --green:        #2B6959;
+    --green-dark:   #1D4D42;
+    --green-light:  #3D8A72;
+    --cream:        #ECE9E4;
+    --cream-strong: #DFD4C2;
+    --guinda:       #611232;
+    --text-dark:    #1C1B18;
+    --text-mid:     #5A5650;
+    --text-soft:    #9A9590;
+    --white:        #FFFFFF;
+
+    /* Image aspect ratio: 900 × 992 = 0.9073:1 */
+    --img-ratio: calc(992 / 900 * 100%);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: #C8C3BC;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px 0;
+  }
+
+  /* ── Phone shell ─────────────────────────────────────────────────────────── */
+  .phone {
+    width: 375px;
+    background: var(--cream);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Status bar ── */
+  .status-bar {
+    height: 44px;
+    background: var(--green-dark);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+  }
+  .status-bar .time {
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    font-variation-settings: 'wdth' 100;
+  }
+  .status-icons { color: white; font-size: 12px; letter-spacing: 3px; }
+
+  /* ── Hero header ─────────────────────────────────────────────────────────── */
+  .hero-header {
+    background: linear-gradient(150deg, var(--green-dark) 0%, var(--green) 55%, var(--green-light) 100%);
+    padding: 20px 20px 56px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .guinda-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--guinda);
+  }
+
+  /* Decorative circles */
+  .deco-circle {
+    position: absolute;
+    border-radius: 50%;
+    border-style: solid;
+    border-color: rgba(255,255,255,0.06);
+  }
+  .deco-circle.c1 { width: 210px; height: 210px; border-width: 34px; top: -60px; right: -35px; }
+  .deco-circle.c2 { width: 110px; height: 110px; border-width: 20px; bottom: 20px; left: -22px; }
+  .deco-circle.c3 { width:  70px; height:  70px; border-width: 13px; top:  40px; left: 60px; opacity: .5; }
+
+  .hero-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    position: relative; z-index: 1;
+  }
+
+  /* Compressed Thin Italic — etiqueta decorativa */
+  .greeting-label {
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 100;
+    font-style: italic;
+    font-stretch: 50%;
+    font-variation-settings: 'wdth' 50;
+    color: rgba(255,255,255,0.65);
+    letter-spacing: 0.3px;
+    margin-bottom: 3px;
+  }
+
+  /* Compressed Medium — nombre */
+  .greeting-name {
+    font-family: var(--font);
+    font-size: 28px;
+    font-weight: 500;
+    font-stretch: 50%;
+    font-variation-settings: 'wdth' 50;
+    color: white;
+    line-height: 1.05;
+    letter-spacing: -0.3px;
+  }
+
+  /* Global regular — subtítulo */
+  .greeting-sub {
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 400;
+    font-variation-settings: 'wdth' 100;
+    color: rgba(255,255,255,0.58);
+    margin-top: 4px;
+  }
+
+  .avatar-btn {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.14);
+    border: 1.5px solid rgba(255,255,255,0.28);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; cursor: pointer;
+  }
+  .avatar-btn svg { width: 20px; height: 20px; }
+
+  /* Stats pills */
+  .stats-pills {
+    display: flex; gap: 8px;
+    flex-wrap: wrap;
+    position: relative; z-index: 1;
+  }
+  .stat-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.11);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 50px;
+    padding: 5px 12px;
+  }
+  .stat-pill .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .stat-pill .dot.green-dot  { background: #9ADBC8; }
+  .stat-pill .dot.guinda-dot { background: #F0A0B0; }
+  .stat-pill .dot.yellow-dot { background: #F5DC80; }
+
+  /* Global medium — stat labels */
+  .stat-pill span {
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 500;
+    font-variation-settings: 'wdth' 100;
+    color: rgba(255,255,255,0.88);
+    white-space: nowrap;
+  }
+
+  /* ── Scrollable content ── */
+  .scroll-content {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: -32px;
+    border-radius: 32px 32px 0 0;
+    background: var(--cream);
+    position: relative; z-index: 2;
+    padding-bottom: 90px;
+  }
+
+  .handle {
+    width: 36px; height: 4px;
+    background: #C8C3BA;
+    border-radius: 2px;
+    margin: 14px auto 0;
+  }
+
+  /* ── Section headers ── */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 22px 20px 12px;
+  }
+
+  /* Compressed Medium — títulos de sección */
+  .section-title {
+    font-family: var(--font);
+    font-size: 20px;
+    font-weight: 500;
+    font-stretch: 50%;
+    font-variation-settings: 'wdth' 50;
+    color: var(--text-dark);
+    letter-spacing: -0.2px;
+  }
+
+  /* Global medium — links */
+  .section-link {
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 500;
+    font-variation-settings: 'wdth' 100;
+    color: var(--green);
+    text-decoration: none;
+  }
+
+  /* ── Primary course card ──────────────────────────────────────────────────── */
+  .primary-card {
+    margin: 0 20px;
+    border-radius: 20px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 4px 24px rgba(43,105,89,0.13);
+    position: relative;
+  }
+
+  /* Guinda top accent */
+  .card-accent {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 4px; background: var(--guinda);
+    border-radius: 20px 20px 0 0; z-index: 2;
+  }
+
+  /* Image container — maintains 900:992 aspect ratio */
+  .primary-img-wrap {
+    position: relative;
+    width: 100%;
+    padding-top: calc(992 / 900 * 100%); /* 900×992 ratio */
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 50%, var(--green-light) 100%);
+  }
+
+  .primary-img-wrap img,
+  .primary-img-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  /* Placeholder content */
+  .primary-img-placeholder {
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 55%, var(--green-light) 100%);
+  }
+
+  /* Decorative grid on placeholder */
+  .primary-img-placeholder::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .placeholder-icon {
+    font-size: 64px; opacity: 0.55; z-index: 1;
+  }
+
+  /* Gradient overlay bottom of image */
+  .img-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 120px;
+    background: linear-gradient(to top, rgba(15,30,25,0.72) 0%, transparent 100%);
+    z-index: 1;
+  }
+
+  /* Org badge top-left */
+  .org-badge {
+    position: absolute; top: 16px; left: 16px; z-index: 2;
+    background: rgba(255,255,255,0.14);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 50px;
+    padding: 4px 10px;
+    font-family: var(--font);
+    font-size: 10px;
+    font-weight: 600;
+    font-variation-settings: 'wdth' 100;
+    color: white;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+  }
+
+  /* Progress pill bottom-right on image */
+  .img-progress-pill {
+    position: absolute; bottom: 14px; right: 14px; z-index: 2;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(6px);
+    border-radius: 50px;
+    padding: 5px 10px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .mini-bar { width: 48px; height: 4px; background: rgba(255,255,255,0.22); border-radius: 2px; overflow: hidden; }
+  .mini-bar-fill { height: 100%; background: #6ECFB0; border-radius: 2px; }
+  .img-progress-pill span {
+    font-family: var(--font);
+    font-size: 12px; font-weight: 700;
+    font-variation-settings: 'wdth' 100;
+    color: white;
+  }
+
+  /* Unit label bottom-left */
+  .img-unit-label {
+    position: absolute; bottom: 14px; left: 16px; z-index: 2;
+    font-family: var(--font);
+    font-size: 11px; font-weight: 100; font-style: italic;
+    font-stretch: 50%;
+    font-variation-settings: 'wdth' 50;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 0.2px;
+  }
+
+  /* Card body */
+  .primary-card-body { padding: 16px 16px 18px; }
+
+  /* Assignment chip */
+  .assignment-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(97,18,50,0.08);
+    border-radius: 50px;
+    padding: 5px 10px; margin-bottom: 10px;
+  }
+  .chip-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--guinda);
+    animation: blink 1.8s ease infinite;
+  }
+  @keyframes blink {
+    0%,100% { opacity:1; } 50% { opacity:0.4; }
+  }
+  .assignment-chip span {
+    font-family: var(--font);
+    font-size: 11px; font-weight: 600;
+    font-variation-settings: 'wdth' 100;
+    color: var(--guinda);
+  }
+
+  /* Compressed Medium — course title */
+  .primary-card-title {
+    font-family: var(--font);
+    font-size: 18px;
+    font-weight: 500;
+    font-stretch: 50%;
+    font-variation-settings: 'wdth' 50;
+    color: var(--text-dark);
+    line-height: 1.25;
+    letter-spacing: -0.2px;
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Global — meta row */
+  .primary-card-meta {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+  }
+  .meta-tag {
+    font-family: var(--font);
+    font-size: 11px; font-weight: 400;
+    font-variation-settings: 'wdth' 100;
+    color: var(--text-soft);
+    display: flex; align-items: center; gap: 3px;
+  }
+  .meta-sep { color: var(--cream-strong); font-size: 14px; }
+
+  /* Progress track */
+  .progress-track {
+    height: 6px;
+    background: #E5E0D8;
+    border-radius: 3px; overflow: hidden;
+    margin-bottom: 14px;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green) 0%, #5BB89A 100%);
+    border-radius: 3px;
+    position: relative;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute; right: -1px; top: 50%;
+    transform: translateY(-50%);
+    width: 10px; height: 10px;
+    background: var(--green);
+    border-radius: 50%;
+    border: 2px solid white;
+  }
+
+  /* Continue button */
+  .continue-btn {
+    width: 100%; height: 50px;
+    border-radius: 14px;
+    background: var(--green);
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .continue-btn span {
+    font-family: var(--font);
+    font-size: 14px; font-weight: 500;
+    font-variation-settings: 'wdth' 100;
+    color: white; letter-spacing: 0.2px;
+  }
+  .continue-btn svg { width: 18px; height: 18px; }
+
+  /* ── Carousel ─────────────────────────────────────────────────────────────── */
+  .carousel-scroll {
+    display: flex; gap: 12px;
+    overflow-x: auto;
+    padding: 0 20px 4px;
+    scrollbar-width: none;
+  }
+  .carousel-scroll::-webkit-scrollbar { display: none; }
+
+  .course-card-sm {
+    flex-shrink: 0;
+    width: 144px;
+    border-radius: 16px;
+    background: white;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(43,105,89,0.09);
+    position: relative;
+  }
+
+  /* Image wrapper — same 900:992 ratio */
+  .sm-img-wrap {
+    position: relative;
+    width: 100%;
+    padding-top: calc(992 / 900 * 100%);
+    overflow: hidden;
+  }
+
+  .sm-img-placeholder {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sm-img-placeholder.v1 { background: linear-gradient(135deg, #2B6959, #5BB89A); }
+  .sm-img-placeholder.v2 { background: linear-gradient(135deg, var(--guinda), #9B2D5A); }
+  .sm-img-placeholder.v3 { background: linear-gradient(135deg, var(--green-dark), #2B6959); }
+  .sm-img-placeholder.v4 { background: linear-gradient(135deg, #3D3020, #8B6014); }
+  .sm-emoji { font-size: 30px; opacity: 0.65; }
+
+  /* Accent bar top */
+  .sm-accent {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 2;
+  }
+
+  /* Ring progress — overlay bottom-right */
+  .ring-wrap {
+    position: absolute; bottom: 8px; right: 8px;
+    width: 32px; height: 32px; z-index: 2;
+  }
+  .ring-wrap svg { width: 32px; height: 32px; transform: rotate(-90deg); }
+  .ring-bg  { fill: none; stroke: rgba(255,255,255,0.2); stroke-width: 3.5; }
+  .ring-arc { fill: none; stroke: white; stroke-width: 3.5; stroke-linecap: round; }
+  .ring-label {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font);
+    font-size: 8px; font-weight: 700;
+    font-variation-settings: 'wdth' 100;
+    color: white;
+  }
+
+  .sm-card-body { padding: 10px 10px 12px; }
+
+  /* Compressed Medium — card title */
+  .sm-card-title {
+    font-family: var(--font);
+    font-size: 13px; font-weight: 500;
+    font-stretch: 50%;
+    font-variation-settings: 'wdth' 50;
+    color: var(--text-dark); line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    margin-bottom: 5px;
+  }
+
+  /* Compressed Thin Italic — status */
+  .sm-card-status {
+    font-family: var(--font);
+    font-size: 11px; font-weight: 100; font-style: italic;
+    font-stretch: 50%;
+    font-variation-settings: 'wdth' 50;
+    color: var(--text-soft);
+  }
+  .sm-card-status.done {
+    color: var(--green); font-style: normal; font-weight: 500;
+    font-variation-settings: 'wdth' 50;
+  }
+
+  /* ── Promo strip ─────────────────────────────────────────────────────────── */
+  .promo-strip {
+    margin: 20px 20px 0;
+    border-radius: 18px;
+    background: linear-gradient(115deg, var(--guinda) 0%, #8A1C46 100%);
+    padding: 18px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative; overflow: hidden;
+  }
+  .promo-strip::before {
+    content: '';
+    position: absolute; width: 130px; height: 130px;
+    border: 22px solid rgba(255,255,255,0.07);
+    border-radius: 50%; top: -50px; right: -20px;
+  }
+
+  /* Compressed Thin Italic — eyebrow */
+  .promo-eyebrow {
+    font-family: var(--font);
+    font-size: 11px; font-weight: 100; font-style: italic;
+    font-stretch: 50%; font-variation-settings: 'wdth' 50;
+    color: rgba(255,255,255,0.58); letter-spacing: 0.3px;
+    margin-bottom: 4px;
+  }
+
+  /* Compressed Medium — promo title */
+  .promo-title {
+    font-family: var(--font);
+    font-size: 18px; font-weight: 500;
+    font-stretch: 50%; font-variation-settings: 'wdth' 50;
+    color: white; line-height: 1.2; z-index: 1;
+  }
+
+  .promo-btn {
+    background: rgba(255,255,255,0.16);
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 50px;
+    padding: 9px 16px; margin-left: 12px; flex-shrink: 0;
+    font-family: var(--font);
+    font-size: 12px; font-weight: 500;
+    font-variation-settings: 'wdth' 100;
+    color: white; cursor: pointer; z-index: 1;
+  }
+  .promo-text { z-index: 1; }
+
+  /* ── Bottom nav ──────────────────────────────────────────────────────────── */
+  .bottom-nav {
+    background: white;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    display: flex; align-items: flex-end; justify-content: space-around;
+    padding: 0 8px 16px; height: 76px;
+    flex-shrink: 0;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    flex: 1; padding-top: 8px; cursor: pointer; position: relative;
+  }
+  .nav-item.active::before {
+    content: '';
+    position: absolute; top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 20px; height: 3px;
+    background: var(--green);
+    border-radius: 0 0 3px 3px;
+  }
+  .nav-item svg { width: 22px; height: 22px; color: #C0BBB4; }
+  .nav-item.active svg { color: var(--green); }
+
+  /* Global regular — nav labels */
+  .nav-label {
+    font-family: var(--font);
+    font-size: 11px; font-weight: 400;
+    font-variation-settings: 'wdth' 100;
+    color: #C0BBB4;
+  }
+  .nav-item.active .nav-label { color: var(--green); font-weight: 500; }
+
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span class="time">11:35</span>
+    <span class="status-icons">▪▪▪ ≋ ▮</span>
+  </div>
+
+  <!-- Hero header -->
+  <div class="hero-header">
+    <div class="guinda-bar"></div>
+    <div class="deco-circle c1"></div>
+    <div class="deco-circle c2"></div>
+    <div class="deco-circle c3"></div>
+
+    <div class="hero-top-row">
+      <div>
+        <div class="greeting-label">Bienvenido de vuelta</div>
+        <div class="greeting-name">Hola, Diego</div>
+        <div class="greeting-sub">Continúa donde lo dejaste</div>
+      </div>
+      <div class="avatar-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="stats-pills">
+      <div class="stat-pill"><div class="dot green-dot"></div><span>4 cursos</span></div>
+      <div class="stat-pill"><div class="dot guinda-dot"></div><span>2 en progreso</span></div>
+      <div class="stat-pill"><div class="dot yellow-dot"></div><span>1 por iniciar</span></div>
+    </div>
+  </div>
+
+  <!-- Scroll area -->
+  <div class="scroll-content">
+    <div class="handle"></div>
+
+    <!-- Primary card section -->
+    <div class="section-header">
+      <span class="section-title">Continuar aprendiendo</span>
+    </div>
+
+    <div class="primary-card">
+      <div class="card-accent"></div>
+
+      <!-- Image 900×992 — full aspect ratio, no crop -->
+      <div class="primary-img-wrap">
+        <div class="primary-img-placeholder">
+          <span class="placeholder-icon">🧩</span>
+        </div>
+        <div class="img-overlay"></div>
+        <div class="org-badge">OEI · Iberoamérica</div>
+        <div class="img-unit-label">Módulo 3 de 8</div>
+        <div class="img-progress-pill">
+          <div class="mini-bar"><div class="mini-bar-fill" style="width:35%"></div></div>
+          <span>35%</span>
+        </div>
+      </div>
+
+      <div class="primary-card-body">
+        <div class="assignment-chip">
+          <div class="chip-dot"></div>
+          <span>Entrega próxima — Nov 30</span>
+        </div>
+
+        <div class="primary-card-title">
+          El aprendizaje basado en proyectos: metodología para educar en ciudadanía global
+        </div>
+
+        <div class="primary-card-meta">
+          <span class="meta-tag">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            A tu ritmo
+          </span>
+          <span class="meta-sep">·</span>
+          <span class="meta-tag">Fin: Dic 2026</span>
+        </div>
+
+        <div class="progress-track">
+          <div class="progress-fill" style="width:35%"></div>
+        </div>
+
+        <button class="continue-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          <span>Continuar — Módulo 3</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Secondary courses -->
+    <div class="section-header">
+      <span class="section-title">Mis cursos</span>
+      <a class="section-link" href="#">Ver todos (4) →</a>
+    </div>
+
+    <div class="carousel-scroll">
+
+      <!-- Card 1 — 25% -->
+      <div class="course-card-sm">
+        <div class="sm-accent" style="background:var(--guinda)"></div>
+        <div class="sm-img-wrap">
+          <div class="sm-img-placeholder v2">
+            <span class="sm-emoji">💻</span>
+          </div>
+          <!-- Ring: r=13, circumference=81.7, offset = 81.7*(1-0.25)=61.3 -->
+          <div class="ring-wrap">
+            <svg viewBox="0 0 32 32">
+              <circle class="ring-bg" cx="16" cy="16" r="12"/>
+              <circle class="ring-arc" cx="16" cy="16" r="12"
+                stroke-dasharray="75.4" stroke-dashoffset="56.6"/>
+            </svg>
+            <div class="ring-label">25%</div>
+          </div>
+        </div>
+        <div class="sm-card-body">
+          <div class="sm-card-title">Búsqueda en Internet para Universidad</div>
+          <div class="sm-card-status">En progreso</div>
+        </div>
+      </div>
+
+      <!-- Card 2 — 80% -->
+      <div class="course-card-sm">
+        <div class="sm-accent" style="background:var(--green)"></div>
+        <div class="sm-img-wrap">
+          <div class="sm-img-placeholder v1">
+            <span class="sm-emoji">🥗</span>
+          </div>
+          <div class="ring-wrap">
+            <svg viewBox="0 0 32 32">
+              <circle class="ring-bg" cx="16" cy="16" r="12"/>
+              <circle class="ring-arc" cx="16" cy="16" r="12"
+                stroke-dasharray="75.4" stroke-dashoffset="15"/>
+            </svg>
+            <div class="ring-label">80%</div>
+          </div>
+        </div>
+        <div class="sm-card-body">
+          <div class="sm-card-title">Alimentación saludable y sostenible</div>
+          <div class="sm-card-status">En progreso</div>
+        </div>
+      </div>
+
+      <!-- Card 3 — 0% -->
+      <div class="course-card-sm">
+        <div class="sm-accent" style="background:var(--cream-strong)"></div>
+        <div class="sm-img-wrap">
+          <div class="sm-img-placeholder v3">
+            <span class="sm-emoji">🛡️</span>
+          </div>
+          <div class="ring-wrap">
+            <svg viewBox="0 0 32 32">
+              <circle class="ring-bg" cx="16" cy="16" r="12"/>
+              <circle class="ring-arc" cx="16" cy="16" r="12"
+                stroke-dasharray="75.4" stroke-dashoffset="75.4"/>
+            </svg>
+            <div class="ring-label">0%</div>
+          </div>
+        </div>
+        <div class="sm-card-body">
+          <div class="sm-card-title">Ciberseguridad: la otra cara del internet</div>
+          <div class="sm-card-status">Sin iniciar</div>
+        </div>
+      </div>
+
+      <!-- Card 4 — 100% -->
+      <div class="course-card-sm">
+        <div class="sm-accent" style="background:#6ECFB0"></div>
+        <div class="sm-img-wrap">
+          <div class="sm-img-placeholder v4">
+            <span class="sm-emoji">📊</span>
+          </div>
+          <div class="ring-wrap">
+            <svg viewBox="0 0 32 32">
+              <circle class="ring-bg" cx="16" cy="16" r="12"/>
+              <circle class="ring-arc" cx="16" cy="16" r="12"
+                stroke-dasharray="75.4" stroke-dashoffset="0"
+                stroke="#6ECFB0"/>
+            </svg>
+            <div class="ring-label" style="color:#6ECFB0;font-size:10px">✓</div>
+          </div>
+        </div>
+        <div class="sm-card-body">
+          <div class="sm-card-title">Datos para la toma de decisiones</div>
+          <div class="sm-card-status done">Completado ✓</div>
+        </div>
+      </div>
+
+    </div><!-- /carousel -->
+
+    <!-- Promo discovery strip -->
+    <div class="promo-strip">
+      <div class="promo-text">
+        <div class="promo-eyebrow">Seguir explorando</div>
+        <div class="promo-title">+1,359 cursos<br>100% gratuitos</div>
+      </div>
+      <div class="promo-btn">Descubrir →</div>
+    </div>
+
+  </div><!-- /scroll-content -->
+
+  <!-- Bottom nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span class="nav-label">Aprender</span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+      </svg>
+      <span class="nav-label">Descubrir</span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span class="nav-label">Perfil</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="brand_background">#F4EFE9</color>
+    <color name="brand_background">#ECE9E4</color>
     <color name="brand_card">#FFFFFF</color>
-    <color name="brand_primary">#4169F2</color>
+    <color name="brand_primary">#2B6959</color>
     <color name="brand_primary_text">#FFFFFF</color>
+
+    <!-- Override del sistema para BottomNav y fondo general -->
+    <color name="background">#ECE9E4</color>
+    <color name="checked_tab_item">#2B6959</color>
+    <color name="unchecked_tab_item">#9A9590</color>
 </resources>

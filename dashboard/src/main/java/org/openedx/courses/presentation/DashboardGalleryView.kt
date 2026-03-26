@@ -2,42 +2,39 @@ package org.openedx.courses.presentation
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
-import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -52,21 +49,28 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -92,15 +96,18 @@ import org.openedx.core.domain.model.Progress
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OfflineModeDialog
 import org.openedx.core.ui.OpenEdXButton
-import org.openedx.core.ui.TextIcon
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.theme.appShapes
-import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.theme.brand_cream
+import org.openedx.core.ui.theme.brand_cream_strong
+import org.openedx.core.ui.theme.brand_green
+import org.openedx.core.ui.theme.brand_guinda
+import org.openedx.core.ui.theme.ttRoundsCompressedMedium
+import org.openedx.core.ui.theme.ttRoundsCompressedThinItalic
+import org.openedx.core.ui.theme.ttRoundsFamily
 import org.openedx.core.utils.TimeUtils
 import org.openedx.courses.presentation.DashboardGalleryFragment.Companion.MOBILE_COURSE_LIST_ITEM_COUNT
-import org.openedx.courses.presentation.DashboardGalleryFragment.Companion.TABLET_COURSE_LIST_ITEM_COUNT
 import org.openedx.dashboard.R
 import org.openedx.foundation.extension.toImageLink
 import org.openedx.foundation.presentation.UIMessage
@@ -109,10 +116,18 @@ import org.openedx.foundation.presentation.windowSizeValue
 import java.util.Date
 import org.openedx.core.R as CoreR
 
+// ── Paleta interna ────────────────────────────────────────────────────────────
+private val heroGradient = listOf(Color(0xFF1D4D42), Color(0xFF2B6959), Color(0xFF3D8A72))
+private val accentColors = listOf(
+    Color(0xFF611232), // guinda
+    Color(0xFF2B6959), // green
+    Color(0xFF3D3020), // dark warm
+    Color(0xFF1D4D42), // green dark
+)
+
+// ── Punto de entrada público ──────────────────────────────────────────────────
 @Composable
-fun DashboardGalleryView(
-    fragmentManager: FragmentManager,
-) {
+fun DashboardGalleryView(fragmentManager: FragmentManager) {
     val windowSize = rememberWindowSize()
     val viewModel: DashboardGalleryViewModel = koinViewModel { parametersOf(windowSize) }
     val updating by viewModel.updating.collectAsState(false)
@@ -134,49 +149,27 @@ fun DashboardGalleryView(
         hasInternetConnection = viewModel.hasInternetConnection,
         onAction = { action ->
             when (action) {
-                DashboardGalleryScreenAction.SwipeRefresh -> {
-                    viewModel.updateCourses()
-                }
-
-                DashboardGalleryScreenAction.ViewAll -> {
-                    viewModel.navigateToAllEnrolledCourses(fragmentManager)
-                }
-
-                DashboardGalleryScreenAction.Reload -> {
-                    viewModel.getCourses()
-                }
-
-                DashboardGalleryScreenAction.NavigateToDiscovery -> {
-                    viewModel.navigateToDiscovery()
-                }
-
-                is DashboardGalleryScreenAction.OpenCourse -> {
-                    viewModel.navigateToCourseOutline(
-                        fragmentManager = fragmentManager,
-                        enrolledCourse = action.enrolledCourse
-                    )
-                }
-
-                is DashboardGalleryScreenAction.NavigateToDates -> {
-                    viewModel.navigateToCourseOutline(
-                        fragmentManager = fragmentManager,
-                        enrolledCourse = action.enrolledCourse,
-                        openDates = true
-                    )
-                }
-
-                is DashboardGalleryScreenAction.OpenBlock -> {
-                    viewModel.navigateToCourseOutline(
-                        fragmentManager = fragmentManager,
-                        enrolledCourse = action.enrolledCourse,
-                        resumeBlockId = action.blockId
-                    )
-                }
+                DashboardGalleryScreenAction.SwipeRefresh -> viewModel.updateCourses()
+                DashboardGalleryScreenAction.ViewAll -> viewModel.navigateToAllEnrolledCourses(fragmentManager)
+                DashboardGalleryScreenAction.Reload -> viewModel.getCourses()
+                DashboardGalleryScreenAction.NavigateToDiscovery -> viewModel.navigateToDiscovery()
+                is DashboardGalleryScreenAction.OpenCourse -> viewModel.navigateToCourseOutline(
+                    fragmentManager = fragmentManager, enrolledCourse = action.enrolledCourse
+                )
+                is DashboardGalleryScreenAction.NavigateToDates -> viewModel.navigateToCourseOutline(
+                    fragmentManager = fragmentManager, enrolledCourse = action.enrolledCourse, openDates = true
+                )
+                is DashboardGalleryScreenAction.OpenBlock -> viewModel.navigateToCourseOutline(
+                    fragmentManager = fragmentManager,
+                    enrolledCourse = action.enrolledCourse,
+                    resumeBlockId = action.blockId
+                )
             }
         }
     )
 }
 
+// ── Pantalla principal ────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun DashboardGalleryView(
@@ -185,124 +178,267 @@ private fun DashboardGalleryView(
     updating: Boolean,
     apiHostUrl: String,
     onAction: (DashboardGalleryScreenAction) -> Unit,
-    hasInternetConnection: Boolean
+    hasInternetConnection: Boolean,
 ) {
-    val windowSize = rememberWindowSize()
     val scaffoldState = rememberScaffoldState()
     val pullRefreshState = rememberPullRefreshState(
         refreshing = updating,
         onRefresh = { onAction(DashboardGalleryScreenAction.SwipeRefresh) }
     )
-    var isInternetConnectionShown by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    val contentWidth by remember(key1 = windowSize) {
-        mutableStateOf(
-            windowSize.windowSizeValue(
-                expanded = Modifier.widthIn(Dp.Unspecified, 560.dp),
-                compact = Modifier.fillMaxWidth(),
-            )
-        )
-    }
-
-    val contentPadding by remember(key1 = windowSize) {
-        mutableStateOf(
-            windowSize.windowSizeValue(
-                expanded = PaddingValues(0.dp),
-                compact = PaddingValues(horizontal = 16.dp)
-            )
-        )
-    }
+    var isInternetConnectionShown by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         scaffoldState = scaffoldState,
         modifier = Modifier.fillMaxSize(),
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = Color(0xFF1D4D42), // green shows behind hero while loading
     ) { paddingValues ->
 
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
-        Surface(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .displayCutoutForLandscape()
-                .padding(paddingValues),
-            color = MaterialTheme.appColors.background
+                .padding(paddingValues)
+                .pullRefresh(pullRefreshState),
         ) {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .pullRefresh(pullRefreshState)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
             ) {
-                when (uiState) {
-                    is DashboardGalleryUIState.Loading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = MaterialTheme.appColors.primary
-                        )
-                    }
+                // ── Hero verde ───────────────────────────────────────────────
+                val courses = (uiState as? DashboardGalleryUIState.Courses)?.userCourses
+                DashboardHero(userCourses = courses)
 
-                    is DashboardGalleryUIState.Courses -> {
-                        UserCourses(
-                            modifier = contentWidth
-                                .fillMaxHeight()
-                                .padding(vertical = 12.dp)
-                                .displayCutoutForLandscape()
-                                .align(Alignment.TopCenter),
-                            contentPadding = contentPadding,
-                            userCourses = uiState.userCourses,
-                            useRelativeDates = uiState.useRelativeDates,
-                            apiHostUrl = apiHostUrl,
-                            openCourse = {
-                                onAction(DashboardGalleryScreenAction.OpenCourse(it))
-                            },
-                            onViewAllClick = {
-                                onAction(DashboardGalleryScreenAction.ViewAll)
-                            },
-                            navigateToDates = {
-                                onAction(DashboardGalleryScreenAction.NavigateToDates(it))
-                            },
-                            resumeBlockId = { course, blockId ->
-                                onAction(DashboardGalleryScreenAction.OpenBlock(course, blockId))
-                            }
+                // ── Tarjeta crema flotante ───────────────────────────────────
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .offset(y = (-32).dp),
+                    shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+                    color = brand_cream,
+                    elevation = 0.dp,
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        // Handle
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .padding(top = 12.dp)
+                                .size(width = 36.dp, height = 4.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(Color(0xFFC8C3BA)),
                         )
-                    }
 
-                    is DashboardGalleryUIState.Empty -> {
-                        NoCoursesInfo(
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                        )
-                        FindACourseButton(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter),
-                            findACourseClick = {
-                                onAction(DashboardGalleryScreenAction.NavigateToDiscovery)
+                        when (uiState) {
+                            is DashboardGalleryUIState.Loading -> {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(300.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    CircularProgressIndicator(color = brand_green)
+                                }
                             }
-                        )
+
+                            is DashboardGalleryUIState.Courses -> {
+                                UserCourses(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .displayCutoutForLandscape(),
+                                    userCourses = uiState.userCourses,
+                                    apiHostUrl = apiHostUrl,
+                                    useRelativeDates = uiState.useRelativeDates,
+                                    openCourse = { onAction(DashboardGalleryScreenAction.OpenCourse(it)) },
+                                    navigateToDates = { onAction(DashboardGalleryScreenAction.NavigateToDates(it)) },
+                                    onViewAllClick = { onAction(DashboardGalleryScreenAction.ViewAll) },
+                                    resumeBlockId = { course, blockId ->
+                                        onAction(DashboardGalleryScreenAction.OpenBlock(course, blockId))
+                                    },
+                                )
+                            }
+
+                            is DashboardGalleryUIState.Empty -> {
+                                NoCoursesInfo(modifier = Modifier.fillMaxWidth())
+                                FindACourseButton(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    findACourseClick = { onAction(DashboardGalleryScreenAction.NavigateToDiscovery) },
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(100.dp))
                     }
                 }
+            }
 
-                PullRefreshIndicator(
-                    updating,
-                    pullRefreshState,
-                    Modifier.align(Alignment.TopCenter)
+            PullRefreshIndicator(
+                refreshing = updating,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                contentColor = brand_green,
+            )
+
+            if (!isInternetConnectionShown && !hasInternetConnection) {
+                OfflineModeDialog(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter),
+                    onDismissCLick = { isInternetConnectionShown = true },
+                    onReloadClick = {
+                        isInternetConnectionShown = true
+                        onAction(DashboardGalleryScreenAction.SwipeRefresh)
+                    },
                 )
+            }
+        }
+    }
+}
 
-                if (!isInternetConnectionShown && !hasInternetConnection) {
-                    OfflineModeDialog(
-                        Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.BottomCenter),
-                        onDismissCLick = {
-                            isInternetConnectionShown = true
-                        },
-                        onReloadClick = {
-                            isInternetConnectionShown = true
-                            onAction(DashboardGalleryScreenAction.SwipeRefresh)
-                        }
+// ── Hero header ───────────────────────────────────────────────────────────────
+@Composable
+private fun DashboardHero(userCourses: CourseEnrollments?) {
+    val allCourses = buildList {
+        userCourses?.primary?.let { add(it) }
+        userCourses?.enrollments?.courses?.let { addAll(it) }
+    }
+    val totalCount = allCourses.size
+    val inProgressCount = allCourses.count { it.progress.value in 0.01f..0.99f }
+    val notStartedCount = allCourses.count { it.progress.value == 0f }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(220.dp),
+    ) {
+        // Fondo gradiente verde
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        colors = heroGradient,
+                        start = Offset(0f, 0f),
+                        end = Offset(Float.POSITIVE_INFINITY, 440f),
+                    )
+                ),
+        )
+
+        // Barra guinda institucional
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .background(brand_guinda),
+        )
+
+        // Círculos decorativos
+        Box(
+            modifier = Modifier
+                .size(210.dp)
+                .offset(x = 220.dp, y = (-60).dp)
+                .clip(CircleShape)
+                .border(34.dp, Color.White.copy(alpha = 0.06f), CircleShape),
+        )
+        Box(
+            modifier = Modifier
+                .size(110.dp)
+                .offset(x = (-22).dp, y = 130.dp)
+                .clip(CircleShape)
+                .border(20.dp, Color.White.copy(alpha = 0.05f), CircleShape),
+        )
+        Box(
+            modifier = Modifier
+                .size(70.dp)
+                .offset(x = 60.dp, y = 40.dp)
+                .clip(CircleShape)
+                .border(13.dp, Color.White.copy(alpha = 0.07f), CircleShape),
+        )
+
+        // Contenido del hero
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp)
+                .padding(top = 24.dp, bottom = 20.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            // Fila: saludo + avatar
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top,
+            ) {
+                Column {
+                    Text(
+                        text = "Bienvenido de vuelta",
+                        style = TextStyle(
+                            fontFamily = ttRoundsCompressedThinItalic,
+                            fontWeight = FontWeight.Thin,
+                            fontStyle = FontStyle.Italic,
+                            fontSize = 13.sp,
+                            color = Color.White.copy(alpha = 0.65f),
+                            letterSpacing = 0.3.sp,
+                        ),
+                    )
+                    Text(
+                        text = "¡Hola!",
+                        style = TextStyle(
+                            fontFamily = ttRoundsCompressedMedium,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 30.sp,
+                            color = Color.White,
+                            letterSpacing = (-0.3).sp,
+                        ),
+                    )
+                    Text(
+                        text = "Continúa donde lo dejaste",
+                        style = TextStyle(
+                            fontFamily = ttRoundsFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 13.sp,
+                            color = Color.White.copy(alpha = 0.58f),
+                        ),
+                    )
+                }
+
+                // Botón avatar
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.14f))
+                        .border(1.5.dp, Color.White.copy(alpha = 0.28f), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.School,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+
+            // Pills de estadísticas
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (totalCount > 0) {
+                    StatPill(
+                        label = "$totalCount cursos",
+                        dotColor = Color(0xFF9ADBC8),
+                    )
+                }
+                if (inProgressCount > 0) {
+                    StatPill(
+                        label = "$inProgressCount en progreso",
+                        dotColor = Color(0xFFF0A0B0),
+                    )
+                }
+                if (notStartedCount > 0) {
+                    StatPill(
+                        label = "$notStartedCount por iniciar",
+                        dotColor = Color(0xFFF5DC80),
                     )
                 }
             }
@@ -311,10 +447,90 @@ private fun DashboardGalleryView(
 }
 
 @Composable
+private fun StatPill(label: String, dotColor: Color) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50.dp))
+            .background(Color.White.copy(alpha = 0.11f))
+            .border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(50.dp))
+            .padding(horizontal = 12.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(6.dp)
+                .clip(CircleShape)
+                .background(dotColor),
+        )
+        Text(
+            text = label,
+            style = TextStyle(
+                fontFamily = ttRoundsFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 11.sp,
+                color = Color.White.copy(alpha = 0.88f),
+                letterSpacing = 0.2.sp,
+            ),
+        )
+    }
+}
+
+// ── Encabezado de sección ─────────────────────────────────────────────────────
+@Composable
+private fun SectionHeader(
+    title: String,
+    linkText: String? = null,
+    onLinkClick: (() -> Unit)? = null,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(top = 22.dp, bottom = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = title,
+            style = TextStyle(
+                fontFamily = ttRoundsCompressedMedium,
+                fontWeight = FontWeight.Medium,
+                fontSize = 20.sp,
+                color = Color(0xFF1C1B18),
+                letterSpacing = (-0.2).sp,
+            ),
+        )
+        if (linkText != null && onLinkClick != null) {
+            Row(
+                modifier = Modifier.clickable(onClick = onLinkClick),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = linkText,
+                    style = TextStyle(
+                        fontFamily = ttRoundsFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp,
+                        color = brand_green,
+                    ),
+                )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = brand_green,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+    }
+}
+
+// ── Contenido de cursos (primario + secundarios) ──────────────────────────────
+@Composable
 private fun UserCourses(
     modifier: Modifier = Modifier,
     userCourses: CourseEnrollments,
-    contentPadding: PaddingValues,
     apiHostUrl: String,
     useRelativeDates: Boolean,
     openCourse: (EnrolledCourse) -> Unit,
@@ -322,528 +538,571 @@ private fun UserCourses(
     onViewAllClick: () -> Unit,
     resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String) -> Unit,
 ) {
-    Column(
-        modifier = modifier
-    ) {
-        val primaryCourse = userCourses.primary
-        if (primaryCourse != null) {
+    Column(modifier = modifier) {
+        // Curso primario
+        userCourses.primary?.let { primary ->
+            SectionHeader(title = "Continuar aprendiendo")
             PrimaryCourseCard(
-                modifier = Modifier.padding(contentPadding),
-                primaryCourse = primaryCourse,
+                modifier = Modifier.padding(horizontal = 20.dp),
+                course = primary,
                 apiHostUrl = apiHostUrl,
+                useRelativeDates = useRelativeDates,
                 navigateToDates = navigateToDates,
                 resumeBlockId = resumeBlockId,
                 openCourse = openCourse,
-                useRelativeDates = useRelativeDates
             )
         }
-        if (userCourses.enrollments.courses.isNotEmpty()) {
-            SecondaryCourses(
-                courses = userCourses.enrollments.courses,
-                hasNextPage = userCourses.enrollments.pagination.next.isNotEmpty(),
-                apiHostUrl = apiHostUrl,
-                contentPadding = contentPadding,
-                onCourseClick = openCourse,
-                onViewAllClick = onViewAllClick
-            )
-        }
-    }
-}
 
-@Composable
-private fun SecondaryCourses(
-    courses: List<EnrolledCourse>,
-    hasNextPage: Boolean,
-    apiHostUrl: String,
-    contentPadding: PaddingValues,
-    onCourseClick: (EnrolledCourse) -> Unit,
-    onViewAllClick: () -> Unit
-) {
-    val windowSize = rememberWindowSize()
-    val itemsCount = if (windowSize.isTablet) {
-        TABLET_COURSE_LIST_ITEM_COUNT
-    } else {
-        MOBILE_COURSE_LIST_ITEM_COUNT
-    }
-    val rows = if (windowSize.isTablet) 2 else 1
-    val height = if (windowSize.isTablet) 322.dp else 152.dp
-    val items = courses.take(itemsCount)
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        TextIcon(
-            modifier = Modifier.padding(contentPadding),
-            text = stringResource(R.string.dashboard_view_all_with_count, courses.size + 1),
-            textStyle = MaterialTheme.appTypography.titleSmall,
-            icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            color = MaterialTheme.appColors.textDark,
-            iconModifier = Modifier.size(22.dp),
-            onClick = onViewAllClick
-        )
-        LazyHorizontalGrid(
-            modifier = Modifier
-                .fillMaxSize()
-                .height(height),
-            rows = GridCells.Fixed(rows),
-            contentPadding = contentPadding,
-            content = {
-                items(items) {
-                    CourseListItem(
-                        course = it,
+        // Cursos secundarios (carrusel)
+        val secondary = userCourses.enrollments.courses.take(MOBILE_COURSE_LIST_ITEM_COUNT)
+        if (secondary.isNotEmpty()) {
+            val totalCount = secondary.size + (if (userCourses.primary != null) 1 else 0)
+            SectionHeader(
+                title = "Mis cursos",
+                linkText = "Ver todos ($totalCount)",
+                onLinkClick = onViewAllClick,
+            )
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(secondary) { course ->
+                    CourseCarouselCard(
+                        course = course,
                         apiHostUrl = apiHostUrl,
-                        onCourseClick = onCourseClick
+                        accentColor = accentColors[secondary.indexOf(course) % accentColors.size],
+                        onClick = { openCourse(course) },
                     )
                 }
-                if (hasNextPage) {
-                    item {
-                        ViewAllItem(
-                            onViewAllClick = onViewAllClick
-                        )
-                    }
-                }
             }
-        )
-    }
-}
-
-@Composable
-private fun ViewAllItem(
-    onViewAllClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .width(140.dp)
-            .height(152.dp)
-            .padding(4.dp)
-            .clickable(
-                onClickLabel = stringResource(id = R.string.dashboard_view_all),
-                onClick = {
-                    onViewAllClick()
-                }
-            ),
-        backgroundColor = MaterialTheme.appColors.cardViewBackground,
-        shape = MaterialTheme.appShapes.courseImageShape,
-        elevation = 4.dp,
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                modifier = Modifier.size(48.dp),
-                painter = painterResource(id = CoreR.drawable.core_ic_book),
-                tint = MaterialTheme.appColors.textFieldBorder,
-                contentDescription = null
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = stringResource(id = R.string.dashboard_view_all),
-                style = MaterialTheme.appTypography.titleSmall,
-                color = MaterialTheme.appColors.textDark
-            )
         }
     }
 }
 
+// ── Tarjeta curso primario ────────────────────────────────────────────────────
 @Composable
-private fun CourseListItem(
+private fun PrimaryCourseCard(
+    modifier: Modifier = Modifier,
     course: EnrolledCourse,
     apiHostUrl: String,
-    onCourseClick: (EnrolledCourse) -> Unit,
+    useRelativeDates: Boolean,
+    navigateToDates: (EnrolledCourse) -> Unit,
+    resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String) -> Unit,
+    openCourse: (EnrolledCourse) -> Unit,
 ) {
-    Card(
-        modifier = Modifier
-            .width(140.dp)
-            .height(152.dp)
-            .padding(4.dp)
-            .clickable {
-                onCourseClick(course)
-            },
-        backgroundColor = MaterialTheme.appColors.background,
-        shape = MaterialTheme.appShapes.courseImageShape,
-        elevation = 4.dp
+    val context = LocalContext.current
+    val progressValue = course.progress.value
+    val hasPastAssignment = !course.courseAssignments?.pastAssignments.isNullOrEmpty()
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White,
+        elevation = 4.dp,
     ) {
-        Box {
-            Column {
+        Column {
+            // Barra acento guinda
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .background(brand_guinda),
+            )
+
+            // Imagen con overlays
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(900f / 992f)
+                    .clip(RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp)),
+            ) {
                 AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
+                    model = ImageRequest.Builder(context)
                         .data(course.course.courseImage.toImageLink(apiHostUrl))
                         .error(CoreR.drawable.core_no_image_course)
                         .placeholder(CoreR.drawable.core_no_image_course)
                         .build(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+
+                // Overlay oscuro en la parte inferior
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(90.dp)
+                        .height(120.dp)
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color(0xB50F1E19)),
+                            )
+                        ),
                 )
-                Text(
+
+                // Badge organización (top-left)
+                Box(
                     modifier = Modifier
-                        .fillMaxHeight()
-                        .padding(horizontal = 4.dp, vertical = 8.dp),
-                    text = course.course.name,
-                    style = MaterialTheme.appTypography.titleSmall,
-                    color = MaterialTheme.appColors.textDark,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 2,
-                    minLines = 2
-                )
-            }
-            if (!course.course.coursewareAccess?.errorCode.isNullOrEmpty()) {
-                Lock()
-            }
-        }
-    }
-}
+                        .padding(16.dp)
+                        .align(Alignment.TopStart)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(Color.White.copy(alpha = 0.14f))
+                        .border(1.dp, Color.White.copy(alpha = 0.28f), RoundedCornerShape(50.dp))
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = course.course.org.uppercase(),
+                        style = TextStyle(
+                            fontFamily = ttRoundsFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 10.sp,
+                            color = Color.White,
+                            letterSpacing = 0.6.sp,
+                        ),
+                    )
+                }
 
-@Composable
-private fun AssignmentItem(
-    modifier: Modifier = Modifier,
-    painter: Painter,
-    title: String?,
-    info: String
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 62.dp)
-            .padding(vertical = 12.dp, horizontal = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            painter = painter,
-            tint = MaterialTheme.appColors.textDark,
-            contentDescription = null
-        )
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            val infoTextStyle = if (title.isNullOrEmpty()) {
-                MaterialTheme.appTypography.titleSmall
-            } else {
-                MaterialTheme.appTypography.labelSmall
-            }
-            Text(
-                text = info,
-                color = MaterialTheme.appColors.textDark,
-                style = infoTextStyle
-            )
-            if (!title.isNullOrEmpty()) {
-                Text(
-                    text = title,
-                    color = MaterialTheme.appColors.textDark,
-                    style = MaterialTheme.appTypography.titleSmall
-                )
-            }
-        }
-        Icon(
-            modifier = Modifier.size(22.dp),
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            tint = MaterialTheme.appColors.textDark,
-            contentDescription = null
-        )
-    }
-}
+                // Etiqueta unidad actual (bottom-left)
+                course.courseStatus?.lastVisitedUnitDisplayName
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { unitName ->
+                        Text(
+                            text = unitName,
+                            modifier = Modifier
+                                .padding(start = 16.dp, bottom = 14.dp)
+                                .align(Alignment.BottomStart),
+                            style = TextStyle(
+                                fontFamily = ttRoundsCompressedThinItalic,
+                                fontWeight = FontWeight.Thin,
+                                fontStyle = FontStyle.Italic,
+                                fontSize = 11.sp,
+                                color = Color.White.copy(alpha = 0.75f),
+                                letterSpacing = 0.2.sp,
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
 
-@Composable
-private fun PrimaryCourseCard(
-    modifier: Modifier = Modifier,
-    primaryCourse: EnrolledCourse,
-    apiHostUrl: String,
-    useRelativeDates: Boolean,
-    navigateToDates: (EnrolledCourse) -> Unit,
-    resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String) -> Unit,
-    openCourse: (EnrolledCourse) -> Unit,
-) {
-    val orientation = LocalConfiguration.current.orientation
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(2.dp),
-        backgroundColor = MaterialTheme.appColors.background,
-        shape = MaterialTheme.appShapes.courseImageShape,
-        elevation = 4.dp
-    ) {
-        when (orientation) {
-            Configuration.ORIENTATION_LANDSCAPE -> {
+                // Píldora de progreso (bottom-right)
                 Row(
                     modifier = Modifier
-                        .clickable {
-                            openCourse(primaryCourse)
-                        }
-                        .height(IntrinsicSize.Min)
+                        .padding(end = 14.dp, bottom = 14.dp)
+                        .align(Alignment.BottomEnd)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(Color.Black.copy(alpha = 0.5f))
+                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(7.dp),
                 ) {
-                    PrimaryCourseCaption(
-                        modifier = Modifier.weight(1f),
-                        primaryCourse = primaryCourse,
-                        apiHostUrl = apiHostUrl,
-                        imageHeight = null,
-                    )
-                    PrimaryCourseButtons(
-                        modifier = Modifier.weight(1f),
-                        primaryCourse = primaryCourse,
-                        navigateToDates = navigateToDates,
-                        resumeBlockId = resumeBlockId,
-                        openCourse = openCourse,
-                        adjustHeight = true,
-                        useRelativeDates = useRelativeDates,
+                    Box(
+                        modifier = Modifier
+                            .width(48.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(Color.White.copy(alpha = 0.22f)),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(progressValue)
+                                .height(4.dp)
+                                .background(Color(0xFF6ECFB0)),
+                        )
+                    }
+                    Text(
+                        text = "${(progressValue * 100).toInt()}%",
+                        style = TextStyle(
+                            fontFamily = ttRoundsFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            color = Color.White,
+                        ),
                     )
                 }
             }
 
-            else -> {
-                Column(
-                    modifier = Modifier.clickable {
-                        openCourse(primaryCourse)
-                    }
-                ) {
-                    PrimaryCourseCaption(
-                        primaryCourse = primaryCourse,
-                        apiHostUrl = apiHostUrl,
-                    )
-                    PrimaryCourseButtons(
-                        primaryCourse = primaryCourse,
-                        navigateToDates = navigateToDates,
-                        resumeBlockId = resumeBlockId,
-                        openCourse = openCourse,
-                        useRelativeDates = useRelativeDates,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PrimaryCourseButtons(
-    modifier: Modifier = Modifier,
-    primaryCourse: EnrolledCourse,
-    useRelativeDates: Boolean,
-    adjustHeight: Boolean = false,
-    navigateToDates: (EnrolledCourse) -> Unit,
-    resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String) -> Unit,
-    openCourse: (EnrolledCourse) -> Unit,
-) {
-    val context = LocalContext.current
-    val pastAssignments = primaryCourse.courseAssignments?.pastAssignments
-    Column(modifier = modifier) {
-        var titleModifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .padding(top = 8.dp, bottom = 16.dp)
-        if (adjustHeight) {
-            titleModifier = titleModifier.weight(1f)
-        }
-        PrimaryCourseTitle(
-            modifier = titleModifier,
-            primaryCourse = primaryCourse,
-        )
-        Divider()
-        if (!pastAssignments.isNullOrEmpty()) {
-            val nearestAssignment = pastAssignments.maxBy { it.date }
-            val title = if (pastAssignments.size == 1) nearestAssignment.title else null
-            AssignmentItem(
-                modifier = Modifier.clickable {
-                    if (pastAssignments.size == 1) {
-                        resumeBlockId(primaryCourse, nearestAssignment.blockId)
-                    } else {
-                        navigateToDates(primaryCourse)
-                    }
-                },
-                painter = rememberVectorPainter(Icons.Default.Warning),
-                title = title,
-                info = pluralStringResource(
-                    R.plurals.dashboard_past_due_assignment,
-                    pastAssignments.size,
-                    pastAssignments.size
-                )
-            )
-        }
-        val futureAssignments = primaryCourse.courseAssignments?.futureAssignments
-        if (!futureAssignments.isNullOrEmpty()) {
-            val nearestAssignment = futureAssignments.minBy { it.date }
-            val title = if (futureAssignments.size == 1) nearestAssignment.title else null
-            Divider()
-            AssignmentItem(
-                modifier = Modifier.clickable {
-                    if (futureAssignments.size == 1) {
-                        resumeBlockId(primaryCourse, nearestAssignment.blockId)
-                    } else {
-                        navigateToDates(primaryCourse)
-                    }
-                },
-                painter = painterResource(id = CoreR.drawable.core_ic_chapter_icon),
-                title = title,
-                info = stringResource(
-                    R.string.dashboard_assignment_due,
-                    nearestAssignment.assignmentType ?: "",
-                    stringResource(
-                        id = CoreR.string.core_date_format_assignment_due,
-                        TimeUtils.formatToString(context, nearestAssignment.date, useRelativeDates),
-                    )
-                )
-            )
-        }
-        ResumeButton(
-            primaryCourse = primaryCourse,
-            onClick = {
-                if (primaryCourse.courseStatus == null) {
-                    openCourse(primaryCourse)
-                } else {
-                    resumeBlockId(
-                        primaryCourse,
-                        primaryCourse.courseStatus?.lastVisitedBlockId ?: ""
-                    )
-                }
-            }
-        )
-    }
-}
-
-@Composable
-private fun PrimaryCourseCaption(
-    modifier: Modifier = Modifier,
-    primaryCourse: EnrolledCourse,
-    imageHeight: Dp? = 180.dp,  // EMI: Aumentado de 140dp (equivalente iOS: 350pts escalado)
-    apiHostUrl: String,
-) {
-    val context = LocalContext.current
-    Column(modifier = modifier) {
-        val imageModifier = imageHeight?.let {
-            Modifier
-                .height(it)
-                .fillMaxWidth()
-        } ?: Modifier
-            .height(IntrinsicSize.Max)
-            .fillMaxWidth()
-            .weight(1f)
-
-        AsyncImage(
-            model = ImageRequest.Builder(context)
-                .data(primaryCourse.course.courseImage.toImageLink(apiHostUrl))
-                .error(CoreR.drawable.core_no_image_course)
-                .placeholder(CoreR.drawable.core_no_image_course)
-                .build(),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = imageModifier,
-        )
-        LinearProgressIndicator(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(8.dp),
-            progress = primaryCourse.progress.value,
-            color = MaterialTheme.appColors.primary,
-            backgroundColor = MaterialTheme.appColors.divider
-        )
-    }
-}
-
-@Composable
-private fun ResumeButton(
-    modifier: Modifier = Modifier,
-    primaryCourse: EnrolledCourse,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .heightIn(min = 60.dp)
-            .background(MaterialTheme.appColors.primary)
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        if (primaryCourse.courseStatus == null) {
-            Icon(
-                imageVector = Icons.Default.School,
-                tint = MaterialTheme.appColors.primaryButtonText,
-                contentDescription = null
-            )
-            Text(
-                modifier = Modifier.weight(1f),
-                text = stringResource(R.string.dashboard_start_course),
-                color = MaterialTheme.appColors.primaryButtonText,
-                style = MaterialTheme.appTypography.titleSmall
-            )
-        } else {
-            Icon(
-                imageVector = Icons.Default.School,
-                tint = MaterialTheme.appColors.primaryButtonText,
-                contentDescription = null
-            )
+            // Cuerpo de la tarjeta
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 14.dp, bottom = 16.dp),
+            ) {
+                // Chip asignación pendiente
+                if (hasPastAssignment) {
+                    val pastAssignments = course.courseAssignments!!.pastAssignments!!
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(Color(0xFF611232).copy(alpha = 0.08f))
+                            .padding(horizontal = 10.dp, vertical = 5.dp)
+                            .clickable {
+                                if (pastAssignments.size == 1) {
+                                    resumeBlockId(course, pastAssignments.first().blockId)
+                                } else {
+                                    navigateToDates(course)
+                                }
+                            },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(brand_guinda),
+                        )
+                        Text(
+                            text = pluralStringResource(
+                                R.plurals.dashboard_past_due_assignment,
+                                pastAssignments.size,
+                                pastAssignments.size,
+                            ),
+                            style = TextStyle(
+                                fontFamily = ttRoundsFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp,
+                                color = brand_guinda,
+                            ),
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+
+                // Título del curso
+                Text(
+                    text = course.course.name,
+                    style = TextStyle(
+                        fontFamily = ttRoundsCompressedMedium,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 18.sp,
+                        color = Color(0xFF1C1B18),
+                        letterSpacing = (-0.2).sp,
+                        lineHeight = 22.sp,
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Fila meta: ritmo + fecha fin
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = if (course.course.isSelfPaced) "A tu ritmo" else "Con fechas",
+                        style = TextStyle(
+                            fontFamily = ttRoundsFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 11.sp,
+                            color = Color(0xFF9A9590),
+                        ),
+                    )
+                    Text(
+                        text = "·",
+                        style = TextStyle(fontSize = 14.sp, color = brand_cream_strong),
+                    )
+                    Text(
+                        text = TimeUtils.getCourseFormattedDate(
+                            context,
+                            Date(),
+                            course.auditAccessExpires,
+                            course.course.start,
+                            course.course.end,
+                            course.course.startType,
+                            course.course.startDisplay,
+                        ),
+                        style = TextStyle(
+                            fontFamily = ttRoundsFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 11.sp,
+                            color = Color(0xFF9A9590),
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Barra de progreso (gradiente)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(Color(0xFFE5E0D8)),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(progressValue)
+                            .fillMaxSize()
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(brand_green, Color(0xFF5BB89A)),
+                                )
+                            ),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Botón continuar
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(brand_green)
+                        .clickable {
+                            if (course.courseStatus == null) {
+                                openCourse(course)
+                            } else {
+                                resumeBlockId(
+                                    course,
+                                    course.courseStatus?.lastVisitedBlockId ?: "",
+                                )
+                            }
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Text(
+                            text = if (course.courseStatus == null) {
+                                stringResource(R.string.dashboard_start_course)
+                            } else {
+                                stringResource(R.string.dashboard_resume_course)
+                            },
+                            style = TextStyle(
+                                fontFamily = ttRoundsFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 14.sp,
+                                color = Color.White,
+                                letterSpacing = 0.2.sp,
+                            ),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── Tarjeta pequeña del carrusel ──────────────────────────────────────────────
+@Composable
+private fun CourseCarouselCard(
+    course: EnrolledCourse,
+    apiHostUrl: String,
+    accentColor: Color,
+    onClick: () -> Unit,
+) {
+    val context = LocalContext.current
+    val progressValue = course.progress.value
+    val statusText = when {
+        progressValue >= 1f -> "Completado"
+        progressValue > 0f -> "En progreso"
+        else -> "Por iniciar"
+    }
+    val statusColor = when {
+        progressValue >= 1f -> brand_green
+        progressValue > 0f -> Color(0xFF5A5650)
+        else -> Color(0xFF9A9590)
+    }
+
+    Surface(
+        modifier = Modifier
+            .width(144.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        elevation = 2.dp,
+    ) {
+        Column {
+            // Barra acento superior
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .background(accentColor),
+            )
+
+            // Imagen con ring de progreso
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(900f / 992f),
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(course.course.courseImage.toImageLink(apiHostUrl))
+                        .error(CoreR.drawable.core_no_image_course)
+                        .placeholder(CoreR.drawable.core_no_image_course)
+                        .build(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+
+                // Ring de progreso (bottom-right)
+                ProgressRing(
+                    progress = progressValue,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 8.dp, bottom = 8.dp),
+                )
+            }
+
+            // Cuerpo
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp)
+                    .padding(top = 10.dp, bottom = 12.dp),
             ) {
                 Text(
-                    text = stringResource(R.string.dashboard_resume_course),
-                    color = MaterialTheme.appColors.primaryButtonText,
-                    style = MaterialTheme.appTypography.labelSmall
+                    text = course.course.name,
+                    style = TextStyle(
+                        fontFamily = ttRoundsCompressedMedium,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 13.sp,
+                        color = Color(0xFF1C1B18),
+                        lineHeight = 17.sp,
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
+                Spacer(modifier = Modifier.height(5.dp))
                 Text(
-                    text = primaryCourse.courseStatus?.lastVisitedUnitDisplayName ?: "",
-                    color = MaterialTheme.appColors.primaryButtonText,
-                    style = MaterialTheme.appTypography.titleSmall
+                    text = statusText,
+                    style = TextStyle(
+                        fontFamily = ttRoundsCompressedThinItalic,
+                        fontWeight = if (progressValue >= 1f) FontWeight.Medium else FontWeight.Thin,
+                        fontStyle = if (progressValue >= 1f) FontStyle.Normal else FontStyle.Italic,
+                        fontSize = 11.sp,
+                        color = statusColor,
+                    ),
                 )
             }
         }
-        Icon(
-            modifier = Modifier.size(22.dp),
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            tint = MaterialTheme.appColors.primaryButtonText,
-            contentDescription = null
+    }
+}
+
+// ── Ring de progreso (Canvas) ─────────────────────────────────────────────────
+@Composable
+private fun ProgressRing(
+    progress: Float,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.size(32.dp)) {
+        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+            val strokeWidth = 3.5.dp.toPx()
+            val diameter = size.minDimension - strokeWidth
+            val topLeft = Offset(strokeWidth / 2, strokeWidth / 2)
+            val arcSize = Size(diameter, diameter)
+            val circumference = Math.PI.toFloat() * diameter
+            val sweepAngle = 360f * progress
+
+            // Arco de fondo
+            drawArc(
+                color = Color.White.copy(alpha = 0.2f),
+                startAngle = -90f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+            )
+
+            // Arco de progreso
+            if (progress > 0f) {
+                drawArc(
+                    color = Color.White,
+                    startAngle = -90f,
+                    sweepAngle = sweepAngle,
+                    useCenter = false,
+                    topLeft = topLeft,
+                    size = arcSize,
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                )
+            }
+        }
+
+        Text(
+            text = "${(progress * 100).toInt()}%",
+            modifier = Modifier.align(Alignment.Center),
+            style = TextStyle(
+                fontFamily = ttRoundsFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 7.sp,
+                color = Color.White,
+            ),
         )
     }
 }
 
+// ── Estado vacío ──────────────────────────────────────────────────────────────
 @Composable
-private fun PrimaryCourseTitle(
-    modifier: Modifier = Modifier,
-    primaryCourse: EnrolledCourse
-) {
+private fun NoCoursesInfo(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.Center
+        modifier = modifier
+            .padding(horizontal = 20.dp)
+            .padding(top = 48.dp, bottom = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = primaryCourse.course.org,
-            style = MaterialTheme.appTypography.labelMedium,
-            color = MaterialTheme.appColors.textFieldHint
-        )
-        Text(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp),
-            text = primaryCourse.course.name,
-            style = MaterialTheme.appTypography.titleLarge,
-            color = MaterialTheme.appColors.textDark,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 3
-        )
-        Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp),
-            style = MaterialTheme.appTypography.labelMedium,
-            color = MaterialTheme.appColors.textFieldHint,
-            text = TimeUtils.getCourseFormattedDate(
-                LocalContext.current,
-                Date(),
-                primaryCourse.auditAccessExpires,
-                primaryCourse.course.start,
-                primaryCourse.course.end,
-                primaryCourse.course.startType,
-                primaryCourse.course.startDisplay
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(brand_green.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(id = CoreR.drawable.core_ic_book),
+                tint = brand_green,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
             )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            modifier = Modifier
+                .testTag("txt_empty_state_title")
+                .fillMaxWidth(),
+            text = stringResource(id = R.string.dashboard_all_courses_empty_title),
+            style = TextStyle(
+                fontFamily = ttRoundsCompressedMedium,
+                fontWeight = FontWeight.Medium,
+                fontSize = 20.sp,
+                color = Color(0xFF1C1B18),
+                letterSpacing = (-0.2).sp,
+            ),
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            modifier = Modifier
+                .testTag("txt_empty_state_description")
+                .fillMaxWidth(),
+            text = stringResource(id = R.string.dashboard_all_courses_empty_description),
+            style = TextStyle(
+                fontFamily = ttRoundsFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                color = Color(0xFF5A5650),
+            ),
+            textAlign = TextAlign.Center,
         )
     }
 }
@@ -851,100 +1110,62 @@ private fun PrimaryCourseTitle(
 @Composable
 private fun FindACourseButton(
     modifier: Modifier = Modifier,
-    findACourseClick: () -> Unit
+    findACourseClick: () -> Unit,
 ) {
-    OpenEdXButton(
+    Box(
         modifier = modifier
+            .padding(horizontal = 20.dp, vertical = 8.dp)
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 20.dp),
-        onClick = {
-            findACourseClick()
-        }
+            .height(52.dp)
+            .clip(RoundedCornerShape(50.dp))
+            .background(brand_green)
+            .clickable(onClick = findACourseClick),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
-            color = MaterialTheme.appColors.primaryButtonText,
-            text = stringResource(id = R.string.dashboard_find_a_course)
+            text = stringResource(id = R.string.dashboard_find_a_course),
+            style = TextStyle(
+                fontFamily = ttRoundsFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = Color.White,
+            ),
         )
     }
 }
 
-@Composable
-private fun NoCoursesInfo(
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            modifier = Modifier.width(200.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                painter = painterResource(id = CoreR.drawable.core_ic_book),
-                tint = MaterialTheme.appColors.textFieldBorder,
-                contentDescription = null
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                modifier = Modifier
-                    .testTag("txt_empty_state_title")
-                    .fillMaxWidth(),
-                text = stringResource(id = R.string.dashboard_all_courses_empty_title),
-                color = MaterialTheme.appColors.textDark,
-                style = MaterialTheme.appTypography.titleMedium,
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(12.dp))
-            Text(
-                modifier = Modifier
-                    .testTag("txt_empty_state_description")
-                    .fillMaxWidth(),
-                text = stringResource(id = R.string.dashboard_all_courses_empty_description),
-                color = MaterialTheme.appColors.textDark,
-                style = MaterialTheme.appTypography.labelMedium,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-private val mockCourseDateBlock = CourseDateBlock(
-    title = "Homework 1: ABCD",
-    description = "After this date, course content will be archived",
-    date = TimeUtils.iso8601ToDate("2024-05-31T15:08:07Z")!!,
-    assignmentType = "Homework"
-)
-private val mockCourseAssignments =
-    CourseAssignments(listOf(mockCourseDateBlock), listOf(mockCourseDateBlock, mockCourseDateBlock))
+// ── Preview data ──────────────────────────────────────────────────────────────
 private val mockCourse = EnrolledCourse(
     auditAccessExpires = Date(),
     created = "created",
     certificate = Certificate(""),
     mode = "mode",
     isActive = true,
-    progress = Progress.DEFAULT_PROGRESS,
-    courseStatus = CourseStatus("", emptyList(), "", "Unit name"),
-    courseAssignments = mockCourseAssignments,
+    progress = Progress(0.35f, 0),
+    courseStatus = CourseStatus("", emptyList(), "", "Unidad: Aprendizaje colaborativo"),
+    courseAssignments = CourseAssignments(
+        pastAssignments = listOf(
+            CourseDateBlock(
+                title = "Tarea 1",
+                description = "",
+                date = TimeUtils.iso8601ToDate("2024-11-30T15:00:00Z")!!,
+                assignmentType = "Homework",
+            )
+        ),
+        futureAssignments = emptyList(),
+    ),
     course = EnrolledCourseData(
         id = "id",
-        name = "Looooooooooooooooooooong Course name",
+        name = "El aprendizaje basado en proyectos: metodología para educar en ciudadanía global",
         number = "",
-        org = "Org",
+        org = "OEI · Iberoamérica",
         start = Date(),
         startDisplay = "",
         startType = "",
         end = Date(),
         dynamicUpgradeDeadline = "",
         subscriptionId = "",
-        coursewareAccess = CoursewareAccess(
-            true,
-            "",
-            "",
-            "",
-            "",
-            "",
-        ),
+        coursewareAccess = CoursewareAccess(true, "", "", "", "", ""),
         media = null,
         courseImage = "",
         courseAbout = "",
@@ -953,36 +1174,34 @@ private val mockCourse = EnrolledCourse(
         courseHandouts = "",
         discussionUrl = "",
         videoOutline = "",
-        isSelfPaced = false
+        isSelfPaced = true,
     )
 )
-private val mockPagination = Pagination(10, "", 4, "1")
-private val mockDashboardCourseList = DashboardCourseList(
-    pagination = mockPagination,
-    courses = listOf(mockCourse, mockCourse, mockCourse, mockCourse, mockCourse, mockCourse)
+
+private val mockCourse2 = mockCourse.copy(
+    progress = Progress(0.25f, 0),
+    course = mockCourse.course.copy(name = "Búsqueda en Internet para Universidad", org = "UNAM"),
+)
+private val mockCourse3 = mockCourse.copy(
+    progress = Progress(0.8f, 0),
+    course = mockCourse.course.copy(name = "Alimentación saludable y sostenible", org = "INSP"),
+)
+private val mockCourse4 = mockCourse.copy(
+    progress = Progress(0f, 0),
+    courseStatus = null,
+    course = mockCourse.course.copy(name = "Ciberseguridad para todos", org = "CERT-MX"),
 )
 
 private val mockUserCourses = CourseEnrollments(
-    enrollments = mockDashboardCourseList,
+    enrollments = DashboardCourseList(
+        pagination = Pagination(10, "", 4, "1"),
+        courses = listOf(mockCourse2, mockCourse3, mockCourse4),
+    ),
     configs = AppConfig(CourseDatesCalendarSync(true, true, true, true)),
-    primary = mockCourse
+    primary = mockCourse,
 )
 
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun ViewAllItemPreview() {
-    OpenEdXTheme {
-        ViewAllItem(
-            onViewAllClick = {}
-        )
-    }
-}
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, device = Devices.NEXUS_9)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.NEXUS_9)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, showSystemUi = true)
 @Composable
 private fun DashboardGalleryViewPreview() {
     OpenEdXTheme {
@@ -991,16 +1210,23 @@ private fun DashboardGalleryViewPreview() {
             apiHostUrl = "",
             uiMessage = null,
             updating = false,
-            hasInternetConnection = false,
-            onAction = {}
+            hasInternetConnection = true,
+            onAction = {},
         )
     }
 }
 
-@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, showSystemUi = true)
 @Composable
-private fun NoCoursesInfoPreview() {
+private fun DashboardEmptyPreview() {
     OpenEdXTheme {
-        NoCoursesInfo()
+        DashboardGalleryView(
+            uiState = DashboardGalleryUIState.Empty,
+            apiHostUrl = "",
+            uiMessage = null,
+            updating = false,
+            hasInternetConnection = true,
+            onAction = {},
+        )
     }
 }

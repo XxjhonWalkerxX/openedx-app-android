@@ -11,7 +11,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.geometry.Offset
@@ -31,7 +30,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -130,7 +128,6 @@ fun OnboardingScreen(
                 ),
         ) {
             DecorativeCircles()
-            FloatingNumbers()
         }
 
         // ── Barra guinda institucional ───────────────────────────────────────
@@ -229,50 +226,6 @@ private fun DecorativeCircles() {
     }
 }
 
-// ── Números flotantes decorativos ─────────────────────────────────────────────
-@Composable
-private fun FloatingNumbers() {
-    data class FloatNum(val text: String, val xFrac: Float, val yFrac: Float, val phaseMs: Int, val size: Float)
-    val nums = listOf(
-        FloatNum("1,359", 0.06f, 0.14f, 0,    24f),
-        FloatNum("2.7M",  0.70f, 0.06f, 900,  20f),
-        FloatNum("95",    0.82f, 0.48f, 450,  28f),
-        FloatNum("3.2M",  0.12f, 0.64f, 1300, 18f),
-        FloatNum("100%",  0.55f, 0.76f, 650,  22f),
-    )
-    val infiniteTransition = rememberInfiniteTransition(label = "floatNums")
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val w = maxWidth
-        val h = maxHeight
-        nums.forEach { num ->
-            val floatY by infiniteTransition.animateFloat(
-                initialValue = -5f,
-                targetValue = 5f,
-                animationSpec = infiniteRepeatable(
-                    tween(2800, easing = FastOutSlowInEasing),
-                    RepeatMode.Reverse,
-                    StartOffset(num.phaseMs),
-                ),
-                label = "floatY_${num.text}",
-            )
-            Text(
-                text = num.text,
-                style = TextStyle(
-                    fontSize = num.size.sp,
-                    fontWeight = FontWeight.Black,
-                    fontFamily = frauncesFamily,
-                    color = Color.White.copy(alpha = 0.09f),
-                    letterSpacing = (-0.5).sp,
-                ),
-                modifier = Modifier.absoluteOffset(
-                    x = w * num.xFrac,
-                    y = h * num.yFrac + floatY.dp,
-                ),
-            )
-        }
-    }
-}
-
 // ── Sección hero verde ────────────────────────────────────────────────────────
 @Composable
 private fun GreenHeroSection() {
@@ -295,43 +248,15 @@ private fun GreenHeroSection() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Headline editorial
-        val headline = buildAnnotatedString {
-            withStyle(
-                SpanStyle(
-                    fontFamily = frauncesFamily,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 38.sp,
-                    color = Color.White,
-                    letterSpacing = (-0.5).sp,
-                )
-            ) { append("Aprende\n") }
-            withStyle(
-                SpanStyle(
-                    fontFamily = frauncesFamily,
-                    fontWeight = FontWeight.Light,
-                    fontStyle = FontStyle.Italic,
-                    fontSize = 34.sp,
-                    color = Color.White.copy(alpha = 0.80f),
-                    letterSpacing = (-0.5).sp,
-                )
-            ) { append("sin límites\n") }
-            withStyle(
-                SpanStyle(
-                    fontFamily = frauncesFamily,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 38.sp,
-                    color = Color.White,
-                    letterSpacing = (-0.5).sp,
-                )
-            ) { append("con la SEP.") }
-        }
-
-        Text(
-            text = headline,
-            textAlign = TextAlign.Center,
-            lineHeight = 42.sp,
-            modifier = Modifier.padding(horizontal = 24.dp),
+        // Slogan institucional (imagen oficial)
+        Image(
+            painter = painterResource(id = AuthR.drawable.aprende_slogan),
+            contentDescription = "La plataforma de cursos en línea de la SEP",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            contentScale = ContentScale.Fit,
+            colorFilter = ColorFilter.tint(Color.White),
         )
 
         Spacer(modifier = Modifier.height(20.dp))

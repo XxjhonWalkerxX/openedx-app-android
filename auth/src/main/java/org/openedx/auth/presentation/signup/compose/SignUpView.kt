@@ -3,7 +3,6 @@ package org.openedx.auth.presentation.signup.compose
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,12 +42,10 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -86,6 +83,7 @@ import org.openedx.foundation.presentation.UIMessage
 import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.WindowType
 import org.openedx.foundation.presentation.windowSizeValue
+import org.openedx.core.ui.theme.brand_green
 import org.openedx.core.R as coreR
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -242,13 +240,11 @@ internal fun SignUpView(
                 )
             }
         ) {
-            Image(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(fraction = 0.3f),
-                painter = painterResource(id = coreR.drawable.core_top_header),
-                contentScale = ContentScale.FillBounds,
-                contentDescription = null
+                    .fillMaxHeight(fraction = 0.3f)
+                    .background(brand_green),
             )
             HandleUIMessage(
                 uiMessage = uiMessage,
