@@ -10,9 +10,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import org.openedx.core.ui.theme.brand_green
+import org.openedx.core.ui.theme.ttRoundsCompressedMedium
+import org.openedx.core.ui.theme.ttRoundsFamily
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -83,34 +91,41 @@ fun ProfileTopic(image: String, title: String, subtitle: String) {
 @Composable
 fun ProfileInfoSection(account: Account) {
     if (account.bio.isNotEmpty()) {
-        Column {
-            Card(
-                modifier = Modifier,
-                shape = MaterialTheme.appShapes.cardShape,
-                elevation = 0.dp,
-                backgroundColor = MaterialTheme.appColors.cardViewBackground
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            elevation = 2.dp,
+            backgroundColor = Color.White,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    if (account.bio.isNotEmpty()) {
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = stringResource(id = ProfileR.string.profile_about_me),
-                            style = MaterialTheme.appTypography.titleSmall,
-                            color = MaterialTheme.appColors.textPrimary
-                        )
-                        Text(
-                            modifier = Modifier.testTag("txt_profile_bio"),
-                            text = account.bio,
-                            style = MaterialTheme.appTypography.bodyMedium,
-                            color = MaterialTheme.appColors.textPrimary
-                        )
-                    }
-                }
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = stringResource(id = ProfileR.string.profile_about_me),
+                    style = TextStyle(
+                        fontFamily = ttRoundsCompressedMedium,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        color = brand_green,
+                        letterSpacing = (-0.1).sp,
+                    ),
+                )
+                Text(
+                    modifier = Modifier
+                        .testTag("txt_profile_bio")
+                        .fillMaxWidth(),
+                    text = account.bio,
+                    style = TextStyle(
+                        fontFamily = ttRoundsFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 13.sp,
+                        color = Color(0xFF5A5650),
+                    ),
+                )
             }
         }
     }
