@@ -17,10 +17,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
@@ -73,6 +72,7 @@ import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.theme.brand_green
 import org.openedx.discovery.domain.model.Course
 import org.openedx.discovery.presentation.DiscoveryRouter
 import org.openedx.discovery.presentation.search.CourseSearchFragment.Companion.LOAD_MORE_THRESHOLD
@@ -82,7 +82,15 @@ import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.WindowType
 import org.openedx.foundation.presentation.rememberWindowSize
 import org.openedx.foundation.presentation.windowSizeValue
+import androidx.compose.ui.graphics.Color
 import org.openedx.discovery.R as discoveryR
+
+private val searchAccentColors = listOf(
+    Color(0xFF2B6959),
+    Color(0xFF611232),
+    Color(0xFF3D3020),
+    Color(0xFF1D4D42),
+)
 
 class CourseSearchFragment : Fragment() {
 
@@ -379,16 +387,15 @@ private fun CourseSearchScreen(
                                 }
 
                                 is CourseSearchUIState.Courses -> {
-                                    items(state.courses) { course ->
+                                    itemsIndexed(state.courses) { index, course ->
                                         DiscoveryCourseItem(
                                             apiHostUrl = apiHostUrl,
-                                            course,
-                                            windowSize = windowSize,
+                                            course = course,
+                                            accentColor = searchAccentColors[index % searchAccentColors.size],
                                             onClick = { courseId ->
                                                 onItemClick(courseId)
                                             }
                                         )
-                                        Divider()
                                     }
                                     item {
                                         if (canLoadMore) {
