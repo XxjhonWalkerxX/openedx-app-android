@@ -121,7 +121,7 @@ fun DiscoveryCourseItem(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(96.dp),
+                    .height(120.dp),
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
@@ -132,7 +132,7 @@ fun DiscoveryCourseItem(
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .width(96.dp)
+                        .width(120.dp)
                         .fillMaxHeight(),
                 )
                 Column(

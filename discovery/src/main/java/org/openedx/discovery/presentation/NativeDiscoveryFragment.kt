@@ -104,7 +104,7 @@ private val accentColors = listOf(
     Color(0xFF3D3020), // dark warm
     Color(0xFF1D4D42), // green dark
 )
-private val heroHeight = 240.dp
+private val heroHeight = 200.dp
 private val heroOverlap = 28.dp
 
 class NativeDiscoveryFragment : Fragment() {
@@ -260,18 +260,14 @@ internal fun DiscoveryScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Verde hero — fixed behind the scrollable content
-            DiscoveryHero(
+            // 1. Verde hero — purely decorative, no interactive elements
+            DiscoveryHeroBackground(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(heroHeight),
-                canShowBackButton = canShowBackButton,
-                onBackClick = onBackClick,
-                onSettingsClick = onSettingsClick,
-                onSearchClick = onSearchClick,
             )
 
-            // Scrollable content overlay
+            // 2. Scrollable content with pull-to-refresh
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -327,6 +323,40 @@ internal fun DiscoveryScreen(
                                                 .clip(RoundedCornerShape(2.dp))
                                                 .background(Color(0xFFC8C3BA)),
                                         )
+                                        // Search bar — interactive, inside LazyColumn so touches work
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 20.dp)
+                                                .padding(top = 16.dp)
+                                                .height(46.dp)
+                                                .clip(RoundedCornerShape(50.dp))
+                                                .background(Color.White)
+                                                .clickable(onClick = onSearchClick)
+                                                .padding(horizontal = 16.dp),
+                                            contentAlignment = Alignment.CenterStart,
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Search,
+                                                    contentDescription = null,
+                                                    tint = brand_green,
+                                                    modifier = Modifier.size(18.dp),
+                                                )
+                                                Text(
+                                                    text = "Buscar cursos...",
+                                                    style = TextStyle(
+                                                        fontFamily = ttRoundsFamily,
+                                                        fontWeight = FontWeight.Normal,
+                                                        fontSize = 13.sp,
+                                                        color = Color(0xFF9A9590),
+                                                    ),
+                                                )
+                                            }
+                                        }
                                         Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -422,19 +452,69 @@ internal fun DiscoveryScreen(
                     )
                 }
             }
+
+            // 3. Nav buttons overlay — drawn last = highest z-order = always clickable
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 20.dp)
+                    .padding(top = 8.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    if (canShowBackButton) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.14f))
+                                .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape)
+                                .clickable(onClick = onBackClick),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.size(40.dp))
+                    }
+
+                    if (!canShowBackButton) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.14f))
+                                .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape)
+                                .clickable(onClick = onSettingsClick),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ManageAccounts,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.size(40.dp))
+                    }
+                }
+            }
         }
     }
 }
 
-// ── Hero verde de exploración ─────────────────────────────────────────────────
+// ── Hero verde de exploración — decorativo, sin elementos interactivos ────────
 @Composable
-private fun DiscoveryHero(
-    modifier: Modifier,
-    canShowBackButton: Boolean,
-    onBackClick: () -> Unit,
-    onSettingsClick: () -> Unit,
-    onSearchClick: () -> Unit,
-) {
+private fun DiscoveryHeroBackground(modifier: Modifier) {
     Box(modifier = modifier) {
         Box(
             modifier = Modifier
@@ -473,57 +553,9 @@ private fun DiscoveryHero(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .padding(horizontal = 20.dp)
-                .padding(top = 8.dp, bottom = 40.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
+                .padding(top = 60.dp, bottom = 40.dp),
+            verticalArrangement = Arrangement.Bottom,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (canShowBackButton) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.14f))
-                            .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape)
-                            .clickable(onClick = onBackClick),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp),
-                        )
-                    }
-                } else {
-                    Spacer(modifier = Modifier.size(40.dp))
-                }
-
-                if (!canShowBackButton) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.14f))
-                            .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape)
-                            .clickable(onClick = onSettingsClick),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ManageAccounts,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-                } else {
-                    Spacer(modifier = Modifier.size(40.dp))
-                }
-            }
-
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = "Explorar",
@@ -546,38 +578,6 @@ private fun DiscoveryHero(
                         letterSpacing = 0.2.sp,
                     ),
                 )
-                Spacer(modifier = Modifier.height(6.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(46.dp)
-                        .clip(RoundedCornerShape(50.dp))
-                        .background(Color.White)
-                        .clickable(onClick = onSearchClick)
-                        .padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.CenterStart,
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = brand_green,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Text(
-                            text = "Buscar cursos...",
-                            style = TextStyle(
-                                fontFamily = ttRoundsFamily,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 13.sp,
-                                color = Color(0xFF9A9590),
-                            ),
-                        )
-                    }
-                }
             }
         }
     }

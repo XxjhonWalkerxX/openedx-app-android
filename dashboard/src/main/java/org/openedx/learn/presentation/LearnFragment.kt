@@ -4,12 +4,18 @@ import android.os.Bundle
 import android.view.View
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
@@ -18,6 +24,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -26,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -41,10 +49,8 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.adapter.NavigationFragmentAdapter
 import org.openedx.core.presentation.global.viewBinding
-import org.openedx.core.ui.MainToolbar
 import org.openedx.core.ui.crop
 import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
@@ -116,40 +122,33 @@ class LearnFragment : Fragment(R.layout.fragment_learn) {
 private fun Header(
     fragmentManager: FragmentManager,
     selectedLearnType: LearnType,
-    onUpdateLearnType: (LearnType) -> Unit
+    onUpdateLearnType: (LearnType) -> Unit,
 ) {
+    // Header is hidden (0dp height in XML). Programs dropdown still rendered if needed.
     val viewModel: LearnViewModel = koinViewModel()
-    val windowSize = rememberWindowSize()
-    val contentWidth by remember(key1 = windowSize) {
-        mutableStateOf(
-            windowSize.windowSizeValue(
-                expanded = Modifier.widthIn(Dp.Unspecified, 650.dp),
-                compact = Modifier.fillMaxWidth(),
+    if (viewModel.isProgramTypeWebView) {
+        val windowSize = rememberWindowSize()
+        val contentWidth by remember(key1 = windowSize) {
+            mutableStateOf(
+                windowSize.windowSizeValue(
+                    expanded = Modifier.widthIn(Dp.Unspecified, 650.dp),
+                    compact = Modifier.fillMaxWidth(),
+                )
             )
-        )
-    }
-
-    Column(
-        modifier = Modifier
-            .background(MaterialTheme.appColors.background)
-            .statusBarsInset()
-            .displayCutoutForLandscape()
-            .then(contentWidth),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        MainToolbar(
-            label = stringResource(id = R.string.dashboard_learn),
-            onSettingsClick = {
-                viewModel.onSettingsClick(fragmentManager)
-            }
-        )
-        if (viewModel.isProgramTypeWebView) {
+        }
+        Column(
+            modifier = Modifier
+                .background(Color(0xFF1D4D42))
+                .displayCutoutForLandscape()
+                .then(contentWidth),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
             LearnDropdownMenu(
                 modifier = Modifier
                     .align(Alignment.Start)
                     .padding(horizontal = 16.dp),
                 selectedLearnType = selectedLearnType,
-                onUpdateLearnType = onUpdateLearnType
+                onUpdateLearnType = onUpdateLearnType,
             )
         }
     }
@@ -240,10 +239,30 @@ private fun LearnDropdownMenu(
 @Composable
 private fun HeaderPreview() {
     OpenEdXTheme {
-        MainToolbar(
-            label = stringResource(id = R.string.dashboard_learn),
-            onSettingsClick = {}
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .background(Color(0xFF1D4D42)),
+            contentAlignment = Alignment.CenterEnd,
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(end = 20.dp)
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.14f))
+                    .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ManageAccounts,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
     }
 }
 

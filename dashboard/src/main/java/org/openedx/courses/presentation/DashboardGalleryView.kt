@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -35,6 +37,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -155,6 +158,7 @@ fun DashboardGalleryView(fragmentManager: FragmentManager) {
                 DashboardGalleryScreenAction.ViewAll -> viewModel.navigateToAllEnrolledCourses(fragmentManager)
                 DashboardGalleryScreenAction.Reload -> viewModel.getCourses()
                 DashboardGalleryScreenAction.NavigateToDiscovery -> viewModel.navigateToDiscovery()
+                DashboardGalleryScreenAction.NavigateToSettings -> viewModel.navigateToSettings(fragmentManager)
                 is DashboardGalleryScreenAction.OpenCourse -> viewModel.navigateToCourseOutline(
                     fragmentManager = fragmentManager, enrolledCourse = action.enrolledCourse
                 )
@@ -192,7 +196,7 @@ private fun DashboardGalleryView(
 
     Scaffold(
         scaffoldState = scaffoldState,
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().navigationBarsPadding(),
         backgroundColor = Color(0xFF1D4D42), // green shows behind hero while loading
     ) { paddingValues ->
 
@@ -211,13 +215,17 @@ private fun DashboardGalleryView(
             ) {
                 // ── Hero verde ───────────────────────────────────────────────
                 val courses = (uiState as? DashboardGalleryUIState.Courses)?.userCourses
-                DashboardHero(userCourses = courses, userName = userName)
+                DashboardHero(
+                    userCourses = courses,
+                    userName = userName,
+                    onSettingsClick = { onAction(DashboardGalleryScreenAction.NavigateToSettings) },
+                )
 
                 // ── Tarjeta crema flotante ───────────────────────────────────
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset(y = (-32).dp),
+                        .offset(y = (-15).dp),
                     shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
                     color = brand_cream,
                     elevation = 0.dp,
@@ -301,7 +309,11 @@ private fun DashboardGalleryView(
 
 // ── Hero header ───────────────────────────────────────────────────────────────
 @Composable
-private fun DashboardHero(userCourses: CourseEnrollments?, userName: String) {
+private fun DashboardHero(
+    userCourses: CourseEnrollments?,
+    userName: String,
+    onSettingsClick: () -> Unit,
+) {
     val (totalCount, inProgressCount, notStartedCount) = remember(userCourses) {
         val all = buildList {
             userCourses?.primary?.let { add(it) }
@@ -331,6 +343,7 @@ private fun DashboardHero(userCourses: CourseEnrollments?, userName: String) {
                 ),
         )
 
+        // Guinda brand stripe at the very top
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -363,10 +376,33 @@ private fun DashboardHero(userCourses: CourseEnrollments?, userName: String) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .statusBarsPadding()
                 .padding(horizontal = 20.dp)
-                .padding(top = 24.dp, bottom = 24.dp),
+                .padding(top = 8.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.14f))
+                        .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape)
+                        .clickable(onClick = onSettingsClick),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ManageAccounts,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -404,22 +440,6 @@ private fun DashboardHero(userCourses: CourseEnrollments?, userName: String) {
                             fontSize = 13.sp,
                             color = Color.White.copy(alpha = 0.58f),
                         ),
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.14f))
-                        .border(1.5.dp, Color.White.copy(alpha = 0.28f), CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.School,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp),
                     )
                 }
             }

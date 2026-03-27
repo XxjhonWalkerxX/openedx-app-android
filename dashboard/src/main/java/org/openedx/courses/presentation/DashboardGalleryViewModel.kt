@@ -132,6 +132,10 @@ class DashboardGalleryViewModel(
         viewModelScope.launch { discoveryNotifier.send(NavigationToDiscovery()) }
     }
 
+    fun navigateToSettings(fragmentManager: FragmentManager) {
+        dashboardRouter.navigateToSettings(fragmentManager)
+    }
+
     fun navigateToAllEnrolledCourses(fragmentManager: FragmentManager) {
         dashboardRouter.navigateToAllEnrolledCourses(fragmentManager)
     }

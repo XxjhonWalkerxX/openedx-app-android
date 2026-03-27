@@ -4,27 +4,34 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -40,39 +47,43 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
+import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.core.domain.model.Media
 import org.openedx.core.ui.AuthButtonsPanel
-import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.SearchBar
 import org.openedx.core.ui.shouldLoadMore
-import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
-import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.theme.brand_cream
 import org.openedx.core.ui.theme.brand_green
+import org.openedx.core.ui.theme.brand_guinda
+import org.openedx.core.ui.theme.ttRoundsCompressedMedium
+import org.openedx.core.ui.theme.ttRoundsCompressedThinItalic
+import org.openedx.core.ui.theme.ttRoundsFamily
 import org.openedx.discovery.domain.model.Course
 import org.openedx.discovery.presentation.DiscoveryRouter
 import org.openedx.discovery.presentation.search.CourseSearchFragment.Companion.LOAD_MORE_THRESHOLD
@@ -81,9 +92,6 @@ import org.openedx.foundation.presentation.UIMessage
 import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.WindowType
 import org.openedx.foundation.presentation.rememberWindowSize
-import org.openedx.foundation.presentation.windowSizeValue
-import androidx.compose.ui.graphics.Color
-import org.openedx.discovery.R as discoveryR
 
 private val searchAccentColors = listOf(
     Color(0xFF2B6959),
@@ -91,28 +99,30 @@ private val searchAccentColors = listOf(
     Color(0xFF3D3020),
     Color(0xFF1D4D42),
 )
+private val searchHeroGradient = listOf(
+    Color(0xFF1D4D42),
+    Color(0xFF2B6959),
+    Color(0xFF3D8A72),
+)
+private val searchHeroHeight = 160.dp
+private val heroOverlap = 28.dp
 
 class CourseSearchFragment : Fragment() {
 
     private val viewModel by viewModel<CourseSearchViewModel>()
-
     private val router by inject<DiscoveryRouter>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
-
                 val uiState by viewModel.uiState.observeAsState(
-                    CourseSearchUIState.Courses(
-                        emptyList(),
-                        0
-                    )
+                    CourseSearchUIState.Courses(emptyList(), 0)
                 )
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
@@ -132,19 +142,12 @@ class CourseSearchFragment : Fragment() {
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStack()
                     },
-                    onSearchTextChanged = {
-                        viewModel.search(it)
-                    },
-                    onSwipeRefresh = {
-                        viewModel.updateSearchQuery()
-                    },
-                    paginationCallback = {
-                        viewModel.fetchMore()
-                    },
+                    onSearchTextChanged = { viewModel.search(it) },
+                    onSwipeRefresh = { viewModel.updateSearchQuery() },
+                    paginationCallback = { viewModel.fetchMore() },
                     onItemClick = {
                         router.navigateToCourseDetail(
-                            requireActivity().supportFragmentManager,
-                            it
+                            requireActivity().supportFragmentManager, it
                         )
                     },
                     onRegisterClick = {
@@ -163,9 +166,7 @@ class CourseSearchFragment : Fragment() {
         const val LOAD_MORE_THRESHOLD = 4
         fun newInstance(querySearch: String): CourseSearchFragment {
             val fragment = CourseSearchFragment()
-            fragment.arguments = bundleOf(
-                ARG_SEARCH_QUERY to querySearch
-            )
+            fragment.arguments = bundleOf(ARG_SEARCH_QUERY to querySearch)
             return fragment
         }
     }
@@ -193,19 +194,11 @@ private fun CourseSearchScreen(
 ) {
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()
-    val firstVisibleIndex = remember {
-        mutableStateOf(scrollState.firstVisibleItemIndex)
-    }
-    val pullRefreshState =
-        rememberPullRefreshState(refreshing = refreshing, onRefresh = { onSwipeRefresh() })
+    val firstVisibleIndex = remember { mutableStateOf(scrollState.firstVisibleItemIndex) }
+    val pullRefreshState = rememberPullRefreshState(refreshing = refreshing, onRefresh = onSwipeRefresh)
 
     var textFieldValue by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(
-            TextFieldValue(
-                text = querySearch,
-                selection = TextRange(querySearch.length)
-            )
-        )
+        mutableStateOf(TextFieldValue(text = querySearch, selection = TextRange(querySearch.length)))
     }
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -221,212 +214,290 @@ private fun CourseSearchScreen(
             .fillMaxSize()
             .navigationBarsPadding()
             .semantics { testTagsAsResourceId = true },
-        backgroundColor = MaterialTheme.appColors.background,
+        backgroundColor = brand_cream,
         bottomBar = {
             if (!isUserLoggedIn) {
-                Box(
-                    modifier = Modifier
-                        .padding(
-                            horizontal = 16.dp,
-                            vertical = 32.dp,
-                        )
-                ) {
+                Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 32.dp)) {
                     AuthButtonsPanel(
                         onRegisterClick = onRegisterClick,
                         onSignInClick = onSignInClick,
-                        showRegisterButton = isRegistrationEnabled
+                        showRegisterButton = isRegistrationEnabled,
                     )
                 }
             }
         }
-    ) {
-        val screenWidth by remember(key1 = windowSize) {
-            mutableStateOf(
-                windowSize.windowSizeValue(
-                    expanded = Modifier.widthIn(Dp.Unspecified, 560.dp),
-                    compact = Modifier.fillMaxWidth()
-                )
-            )
-        }
-        val searchTab by remember(key1 = windowSize) {
-            mutableStateOf(
-                windowSize.windowSizeValue(
-                    expanded = Modifier.width(420.dp),
-                    compact = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                )
-            )
-        }
-        val contentPaddings by remember {
-            mutableStateOf(
-                windowSize.windowSizeValue(
-                    expanded = PaddingValues(
-                        top = 32.dp,
-                        bottom = 40.dp
-                    ),
-                    compact = PaddingValues(horizontal = 24.dp, vertical = 28.dp)
-                )
-            )
-        }
-
+    ) { paddingValues ->
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(it)
-                .statusBarsInset(),
-            contentAlignment = Alignment.TopCenter
+                .padding(paddingValues)
         ) {
-            Column(screenWidth) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .zIndex(1f),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        BackBtn {
-                            onBackClick()
-                        }
-                        Text(
-                            modifier = Modifier
-                                .testTag("txt_search_title")
-                                .fillMaxWidth()
-                                .padding(horizontal = 56.dp),
-                            text = stringResource(id = org.openedx.core.R.string.core_search),
-                            color = MaterialTheme.appColors.textPrimary,
-                            style = MaterialTheme.appTypography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    SearchBar(
-                        modifier = Modifier
-                            .height(48.dp)
-                            .then(searchTab),
-                        label = "",
-                        requestFocus = true,
-                        searchValue = textFieldValue,
-                        keyboardActions = {
-                            focusManager.clearFocus()
-                        },
-                        onValueChanged = { text ->
-                            textFieldValue = text
-                            onSearchTextChanged(textFieldValue.text)
-                        },
-                        onClearValue = {
-                            textFieldValue = TextFieldValue("")
-                            onSearchTextChanged(textFieldValue.text)
-                        }
+            // 1. Verde hero — purely decorative
+            SearchHeroBackground(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(searchHeroHeight),
+            )
+
+            // 2. Scrollable content
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pullRefresh(pullRefreshState)
+            ) {
+                val typingText = if (textFieldValue.text.isEmpty()) {
+                    "Empieza a escribir para encontrar un curso"
+                } else {
+                    pluralStringResource(
+                        id = org.openedx.discovery.R.plurals.discovery_found_courses,
+                        (state as? CourseSearchUIState.Courses)?.numCourses ?: 0,
+                        (state as? CourseSearchUIState.Courses)?.numCourses ?: 0,
                     )
-                    Spacer(modifier = Modifier.height(20.dp))
                 }
-                Surface(
-                    color = MaterialTheme.appColors.background
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = scrollState,
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .pullRefresh(pullRefreshState)
-                    ) {
-                        val typingText =
-                            if (textFieldValue.text.isEmpty()) {
-                                stringResource(id = discoveryR.string.discovery_start_typing_to_find)
-                            } else {
-                                pluralStringResource(
-                                    id = discoveryR.plurals.discovery_found_courses,
-                                    (state as? CourseSearchUIState.Courses)?.numCourses ?: 0,
-                                    (state as? CourseSearchUIState.Courses)?.numCourses ?: 0
-                                )
-                            }
-                        LazyColumn(
-                            Modifier.fillMaxSize(),
-                            contentPadding = contentPaddings,
-                            state = scrollState
+                    item(key = "spacer") {
+                        Spacer(modifier = Modifier.height(searchHeroHeight - heroOverlap))
+                    }
+                    item(key = "header") {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+                            color = brand_cream,
+                            elevation = 0.dp,
                         ) {
-                            item {
-                                Column {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                        .padding(top = 12.dp)
+                                        .size(width = 36.dp, height = 4.dp)
+                                        .clip(RoundedCornerShape(2.dp))
+                                        .background(Color(0xFFC8C3BA)),
+                                )
+                                // Real search input
+                                SearchBar(
+                                    modifier = Modifier
+                                        .testTag("tf_search_bar")
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 20.dp)
+                                        .padding(top = 16.dp)
+                                        .height(48.dp),
+                                    label = "",
+                                    requestFocus = true,
+                                    searchValue = textFieldValue,
+                                    keyboardActions = { focusManager.clearFocus() },
+                                    onValueChanged = { text ->
+                                        textFieldValue = text
+                                        onSearchTextChanged(textFieldValue.text)
+                                    },
+                                    onClearValue = {
+                                        textFieldValue = TextFieldValue("")
+                                        onSearchTextChanged("")
+                                    },
+                                )
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 20.dp)
+                                        .padding(top = 20.dp, bottom = 12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                ) {
                                     Text(
                                         modifier = Modifier.testTag("txt_search_results_title"),
-                                        text = stringResource(id = discoveryR.string.discovery_search_results),
-                                        color = MaterialTheme.appColors.textPrimary,
-                                        style = MaterialTheme.appTypography.displaySmall
+                                        text = "Resultados de búsqueda",
+                                        style = TextStyle(
+                                            fontFamily = ttRoundsCompressedMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 22.sp,
+                                            color = Color(0xFF1C1B18),
+                                            letterSpacing = (-0.2).sp,
+                                        ),
                                     )
                                     Text(
-                                        modifier = Modifier
-                                            .testTag("txt_search_results_subtitle")
-                                            .padding(top = 4.dp),
+                                        modifier = Modifier.testTag("txt_search_results_subtitle"),
                                         text = typingText,
-                                        color = MaterialTheme.appColors.textPrimary,
-                                        style = MaterialTheme.appTypography.titleSmall
+                                        style = TextStyle(
+                                            fontFamily = ttRoundsFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            fontSize = 13.sp,
+                                            color = Color(0xFF9A9590),
+                                        ),
                                     )
-                                    Spacer(modifier = Modifier.height(14.dp))
-                                }
-                            }
-                            when (state) {
-                                is CourseSearchUIState.Loading -> {
-                                    item {
-                                        Box(
-                                            Modifier
-                                                .fillMaxSize()
-                                                .padding(vertical = 25.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            CircularProgressIndicator(color = MaterialTheme.appColors.primary)
-                                        }
-                                    }
-                                }
-
-                                is CourseSearchUIState.Courses -> {
-                                    itemsIndexed(state.courses) { index, course ->
-                                        DiscoveryCourseItem(
-                                            apiHostUrl = apiHostUrl,
-                                            course = course,
-                                            accentColor = searchAccentColors[index % searchAccentColors.size],
-                                            onClick = { courseId ->
-                                                onItemClick(courseId)
-                                            }
-                                        )
-                                    }
-                                    item {
-                                        if (canLoadMore) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 16.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                CircularProgressIndicator(color = MaterialTheme.appColors.primary)
-                                            }
-                                        }
-                                    }
-                                    if (scrollState.shouldLoadMore(firstVisibleIndex, LOAD_MORE_THRESHOLD)) {
-                                        paginationCallback()
-                                    }
                                 }
                             }
                         }
-                        PullRefreshIndicator(
-                            refreshing,
-                            pullRefreshState,
-                            Modifier.align(Alignment.TopCenter)
+                    }
+
+                    when (state) {
+                        is CourseSearchUIState.Loading -> {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(brand_cream)
+                                        .padding(vertical = 40.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    CircularProgressIndicator(color = brand_green)
+                                }
+                            }
+                        }
+
+                        is CourseSearchUIState.Courses -> {
+                            itemsIndexed(state.courses) { index, course ->
+                                Box(
+                                    modifier = Modifier
+                                        .background(brand_cream)
+                                        .padding(horizontal = 20.dp)
+                                        .padding(bottom = 10.dp),
+                                ) {
+                                    DiscoveryCourseItem(
+                                        apiHostUrl = apiHostUrl,
+                                        course = course,
+                                        accentColor = searchAccentColors[index % searchAccentColors.size],
+                                        onClick = { courseId -> onItemClick(courseId) },
+                                    )
+                                }
+                            }
+                            item {
+                                if (canLoadMore) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(brand_cream)
+                                            .padding(vertical = 16.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        CircularProgressIndicator(color = brand_green)
+                                    }
+                                }
+                            }
+                            if (scrollState.shouldLoadMore(firstVisibleIndex, LOAD_MORE_THRESHOLD)) {
+                                paginationCallback()
+                            }
+                        }
+                    }
+
+                    item(key = "bottom_space") {
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(80.dp)
+                                .background(brand_cream),
                         )
                     }
+                }
+
+                PullRefreshIndicator(
+                    refreshing = refreshing,
+                    state = pullRefreshState,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    contentColor = brand_green,
+                )
+            }
+
+            // 3. Back button overlay — last child = highest z-order
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 20.dp)
+                    .padding(top = 8.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.14f))
+                        .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape)
+                        .clickable(onClick = onBackClick),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp),
+                    )
                 }
             }
         }
     }
+
     LaunchedEffect(rememberSaveable { true }) {
         onSearchTextChanged(querySearch)
+    }
+}
+
+@Composable
+private fun SearchHeroBackground(modifier: Modifier) {
+    Box(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.linearGradient(
+                        colors = searchHeroGradient,
+                        start = Offset(0f, 0f),
+                        end = Offset(Float.POSITIVE_INFINITY, 320f),
+                    )
+                )
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .background(brand_guinda),
+        )
+        Box(
+            modifier = Modifier
+                .size(180.dp)
+                .align(Alignment.TopEnd)
+                .clip(CircleShape)
+                .border(28.dp, Color.White.copy(alpha = 0.06f), CircleShape),
+        )
+        Box(
+            modifier = Modifier
+                .size(90.dp)
+                .align(Alignment.BottomStart)
+                .clip(CircleShape)
+                .border(16.dp, Color.White.copy(alpha = 0.05f), CircleShape),
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .padding(start = 72.dp, end = 20.dp, bottom = 36.dp),
+            verticalArrangement = Arrangement.Bottom,
+        ) {
+            Text(
+                text = "Buscar",
+                style = TextStyle(
+                    fontFamily = ttRoundsCompressedMedium,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 30.sp,
+                    color = Color.White,
+                    letterSpacing = (-0.3).sp,
+                ),
+            )
+            Text(
+                text = "Explora nuestra oferta educativa",
+                style = TextStyle(
+                    fontFamily = ttRoundsCompressedThinItalic,
+                    fontWeight = FontWeight.Thin,
+                    fontStyle = FontStyle.Italic,
+                    fontSize = 13.sp,
+                    color = Color.White.copy(alpha = 0.65f),
+                    letterSpacing = 0.2.sp,
+                ),
+            )
+        }
     }
 }
 
@@ -457,7 +528,6 @@ fun CourseSearchScreenPreview() {
 }
 
 @Preview(device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Preview(device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun CourseSearchScreenTabletPreview() {
     OpenEdXTheme {
@@ -503,5 +573,5 @@ private val mockCourse = Course(
     startDisplay = "startDisplay",
     startType = "startType",
     overview = "",
-    isEnrolled = false
+    isEnrolled = false,
 )
