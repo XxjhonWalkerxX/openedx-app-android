@@ -22,11 +22,9 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.LocalMinimumInteractiveComponentEnforcement
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -47,14 +45,12 @@ import androidx.compose.ui.unit.dp
 import org.openedx.core.domain.model.CalendarData
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncState
 import org.openedx.core.ui.OpenEdXOutlinedButton
-import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.settingsHeaderBackground
-import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.theme.brand_green
+import org.openedx.profile.presentation.ui.SettingsHeroLayout
 import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.WindowType
 import org.openedx.foundation.presentation.windowSizeValue
@@ -72,98 +68,47 @@ fun CalendarSettingsView(
     onCourseToSyncClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
-    val scaffoldState = rememberScaffoldState()
     val scrollState = rememberScrollState()
 
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .semantics {
-                testTagsAsResourceId = true
-            },
-        scaffoldState = scaffoldState
-    ) { paddingValues ->
-
-        val contentWidth by remember(key1 = windowSize) {
-            mutableStateOf(
-                windowSize.windowSizeValue(
-                    expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
-                    compact = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                )
+    val contentWidth by remember(key1 = windowSize) {
+        mutableStateOf(
+            windowSize.windowSizeValue(
+                expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
+                compact = Modifier.fillMaxWidth()
             )
-        }
+        )
+    }
 
-        val topBarWidth by remember(key1 = windowSize) {
-            mutableStateOf(
-                windowSize.windowSizeValue(
-                    expanded = Modifier.widthIn(Dp.Unspecified, 560.dp),
-                    compact = Modifier
-                        .fillMaxWidth()
-                )
-            )
-        }
-
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
+    SettingsHeroLayout(
+        title = stringResource(id = R.string.profile_dates_and_calendar),
+        onBackClick = onBackClick,
+    ) {
+        Column(
+            modifier = contentWidth
+                .verticalScroll(scrollState)
+                .padding(horizontal = 16.dp, vertical = 24.dp),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .settingsHeaderBackground()
-                    .statusBarsInset(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Toolbar(
-                    modifier = topBarWidth
-                        .displayCutoutForLandscape(),
-                    label = stringResource(id = R.string.profile_dates_and_calendar),
-                    canShowBackBtn = true,
-                    labelTint = MaterialTheme.appColors.settingsTitleContent,
-                    iconTint = MaterialTheme.appColors.settingsTitleContent,
-                    onBackClick = onBackClick
+            if (uiState.calendarData != null) {
+                CalendarSyncSection(
+                    isCourseCalendarSyncEnabled = uiState.isCalendarSyncEnabled,
+                    calendarData = uiState.calendarData,
+                    calendarSyncState = uiState.calendarSyncState,
+                    onCalendarSyncSwitchClick = onCalendarSyncSwitchClick,
+                    onChangeSyncOptionClick = onChangeSyncOptionClick
                 )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(MaterialTheme.appShapes.screenBackgroundShape)
-                        .background(MaterialTheme.appColors.background)
-                        .displayCutoutForLandscape(),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    Column(
-                        modifier = contentWidth
-                            .verticalScroll(scrollState)
-                            .padding(vertical = 28.dp),
-                    ) {
-                        if (uiState.calendarData != null) {
-                            CalendarSyncSection(
-                                isCourseCalendarSyncEnabled = uiState.isCalendarSyncEnabled,
-                                calendarData = uiState.calendarData,
-                                calendarSyncState = uiState.calendarSyncState,
-                                onCalendarSyncSwitchClick = onCalendarSyncSwitchClick,
-                                onChangeSyncOptionClick = onChangeSyncOptionClick
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(20.dp))
-                        if (uiState.coursesSynced != null) {
-                            CoursesToSyncSection(
-                                coursesSynced = uiState.coursesSynced,
-                                onCourseToSyncClick = onCourseToSyncClick
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(32.dp))
-                        OptionsSection(
-                            isRelativeDatesEnabled = uiState.isRelativeDateEnabled,
-                            onRelativeDateSwitchClick = onRelativeDateSwitchClick
-                        )
-                    }
-                }
             }
+            Spacer(modifier = Modifier.height(20.dp))
+            if (uiState.coursesSynced != null) {
+                CoursesToSyncSection(
+                    coursesSynced = uiState.coursesSynced,
+                    onCourseToSyncClick = onCourseToSyncClick
+                )
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+            OptionsSection(
+                isRelativeDatesEnabled = uiState.isRelativeDateEnabled,
+                onRelativeDateSwitchClick = onRelativeDateSwitchClick
+            )
         }
     }
 }
@@ -241,7 +186,7 @@ fun CalendarSyncSection(
                     checked = isCourseCalendarSyncEnabled,
                     onCheckedChange = onCalendarSyncSwitchClick,
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.appColors.textAccent
+                        checkedThumbColor = brand_green
                     )
                 )
             }
@@ -267,8 +212,8 @@ fun SyncOptionsButton(
         modifier = Modifier.fillMaxWidth(),
         text = stringResource(R.string.profile_change_sync_options),
         backgroundColor = MaterialTheme.appColors.background,
-        borderColor = MaterialTheme.appColors.primaryButtonBackground,
-        textColor = MaterialTheme.appColors.primaryButtonBackground,
+        borderColor = brand_green,
+        textColor = brand_green,
         onClick = {
             onChangeSyncOptionClick()
         }

@@ -41,14 +41,12 @@ import org.openedx.core.R
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IconText
 import org.openedx.core.ui.OpenEdXOutlinedButton
-import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.settingsHeaderBackground
-import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.theme.brand_green
+import org.openedx.core.ui.theme.brand_guinda
+import org.openedx.profile.presentation.ui.SettingsHeroLayout
 import org.openedx.foundation.presentation.UIMessage
 import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.WindowType
@@ -106,99 +104,65 @@ internal fun ManageAccountView(
 
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .settingsHeaderBackground()
-                .statusBarsInset(),
-            horizontalAlignment = Alignment.CenterHorizontally
+        SettingsHeroLayout(
+            title = stringResource(id = R.string.core_manage_account),
+            onBackClick = { onAction(ManageAccountViewAction.BackClick) },
         ) {
             Box(
-                contentAlignment = Alignment.CenterEnd
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pullRefresh(pullRefreshState),
+                contentAlignment = Alignment.TopCenter,
             ) {
-                Toolbar(
-                    modifier = topBarWidth
-                        .displayCutoutForLandscape(),
-                    label = stringResource(id = R.string.core_manage_account),
-                    canShowBackBtn = true,
-                    labelTint = MaterialTheme.appColors.settingsTitleContent,
-                    iconTint = MaterialTheme.appColors.settingsTitleContent,
-                    onBackClick = {
-                        onAction(ManageAccountViewAction.BackClick)
-                    }
-                )
-            }
-            Surface(
-                color = MaterialTheme.appColors.background,
-                shape = MaterialTheme.appShapes.screenBackgroundShape,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .pullRefresh(pullRefreshState),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .displayCutoutForLandscape(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        when (uiState) {
-                            is ManageAccountUIState.Loading -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(color = MaterialTheme.appColors.primary)
-                                }
-                            }
-
-                            is ManageAccountUIState.Data -> {
-                                Column(
-                                    Modifier
-                                        .fillMaxHeight()
-                                        .then(contentWidth)
-                                        .verticalScroll(rememberScrollState()),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(24.dp)
-                                ) {
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    ProfileTopic(
-                                        image = uiState.account.profileImage.imageUrlFull,
-                                        title = uiState.account.name,
-                                        subtitle = uiState.account.email ?: ""
-                                    )
-                                    OpenEdXOutlinedButton(
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
-                                        text = stringResource(id = ProfileR.string.profile_edit_profile),
-                                        onClick = {
-                                            onAction(ManageAccountViewAction.EditAccountClick)
-                                        },
-                                        borderColor = MaterialTheme.appColors.primaryButtonBackground,
-                                        textColor = MaterialTheme.appColors.textAccent
-                                    )
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    IconText(
-                                        text = stringResource(id = ProfileR.string.profile_delete_profile),
-                                        painter = painterResource(id = ProfileR.drawable.profile_ic_trash),
-                                        textStyle = MaterialTheme.appTypography.labelLarge,
-                                        color = MaterialTheme.appColors.error,
-                                        onClick = {
-                                            onAction(ManageAccountViewAction.DeleteAccount)
-                                        }
-                                    )
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                }
-                            }
+                when (uiState) {
+                    is ManageAccountUIState.Loading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = brand_green)
                         }
                     }
-                    PullRefreshIndicator(
-                        refreshing,
-                        pullRefreshState,
-                        Modifier.align(Alignment.TopCenter)
-                    )
+
+                    is ManageAccountUIState.Data -> {
+                        Column(
+                            Modifier
+                                .fillMaxHeight()
+                                .then(contentWidth)
+                                .verticalScroll(rememberScrollState()),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                        ) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            ProfileTopic(
+                                image = uiState.account.profileImage.imageUrlFull,
+                                title = uiState.account.name,
+                                subtitle = uiState.account.email ?: ""
+                            )
+                            OpenEdXOutlinedButton(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = stringResource(id = ProfileR.string.profile_edit_profile),
+                                onClick = { onAction(ManageAccountViewAction.EditAccountClick) },
+                                borderColor = brand_green,
+                                textColor = brand_green,
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            IconText(
+                                text = stringResource(id = ProfileR.string.profile_delete_profile),
+                                painter = painterResource(id = ProfileR.drawable.profile_ic_trash),
+                                textStyle = MaterialTheme.appTypography.labelLarge,
+                                color = brand_guinda,
+                                onClick = { onAction(ManageAccountViewAction.DeleteAccount) }
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                    }
                 }
+                PullRefreshIndicator(
+                    refreshing,
+                    pullRefreshState,
+                    Modifier.align(Alignment.TopCenter),
+                )
             }
         }
     }

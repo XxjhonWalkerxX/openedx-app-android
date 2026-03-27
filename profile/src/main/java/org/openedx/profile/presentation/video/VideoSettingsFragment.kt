@@ -45,20 +45,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.core.domain.model.VideoSettings
-import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.noRippleClickable
-import org.openedx.core.ui.settingsHeaderBackground
-import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.theme.appShapes
-import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.theme.brand_green
+import org.openedx.core.ui.theme.ttRoundsFamily
+import org.openedx.profile.presentation.ui.SettingsHeroLayout
 import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.WindowType
 import org.openedx.foundation.presentation.rememberWindowSize
@@ -118,183 +118,181 @@ private fun VideoSettingsScreen(
     videoDownloadQualityClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
-    val scaffoldState = rememberScaffoldState()
-
     var wifiDownloadOnly by rememberSaveable {
         mutableStateOf(videoSettings.wifiDownloadOnly)
     }
 
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .semantics {
-                testTagsAsResourceId = true
-            },
-        scaffoldState = scaffoldState
-    ) { paddingValues ->
-
-        val contentWidth by remember(key1 = windowSize) {
-            mutableStateOf(
-                windowSize.windowSizeValue(
-                    expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
-                    compact = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                )
+    val contentWidth by remember(key1 = windowSize) {
+        mutableStateOf(
+            windowSize.windowSizeValue(
+                expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
+                compact = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
             )
-        }
+        )
+    }
 
-        val topBarWidth by remember(key1 = windowSize) {
-            mutableStateOf(
-                windowSize.windowSizeValue(
-                    expanded = Modifier.widthIn(Dp.Unspecified, 560.dp),
-                    compact = Modifier
-                        .fillMaxWidth()
-                )
-            )
-        }
-
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
+    SettingsHeroLayout(
+        title = stringResource(id = R.string.profile_video),
+        onBackClick = onBackClick,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .settingsHeaderBackground()
-                    .statusBarsInset(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Toolbar(
-                    modifier = topBarWidth
-                        .displayCutoutForLandscape(),
-                    label = stringResource(id = R.string.profile_video),
-                    canShowBackBtn = true,
-                    labelTint = MaterialTheme.appColors.settingsTitleContent,
-                    iconTint = MaterialTheme.appColors.settingsTitleContent,
-                    onBackClick = onBackClick
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(MaterialTheme.appShapes.screenBackgroundShape)
-                        .background(MaterialTheme.appColors.background)
-                        .displayCutoutForLandscape(),
-                    contentAlignment = Alignment.TopCenter
+            // WiFi only toggle card
+            VideoSettingCard {
+                Row(
+                    Modifier
+                        .testTag("btn_wifi_only")
+                        .fillMaxWidth()
+                        .noRippleClickable {
+                            wifiDownloadOnly = !wifiDownloadOnly
+                            wifiDownloadChanged(wifiDownloadOnly)
+                        }
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(
-                        modifier = contentWidth
-                    ) {
-                        Row(
-                            Modifier
-                                .testTag("btn_wifi_only")
-                                .fillMaxWidth()
-                                .height(92.dp)
-                                .padding(top = 8.dp)
-                                .noRippleClickable {
-                                    wifiDownloadOnly = !wifiDownloadOnly
-                                    wifiDownloadChanged(wifiDownloadOnly)
-                                },
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(Modifier.weight(1f)) {
-                                Text(
-                                    modifier = Modifier.testTag("txt_wifi_only_label"),
-                                    text = stringResource(id = R.string.profile_wifi_only_download),
-                                    color = MaterialTheme.appColors.textPrimary,
-                                    style = MaterialTheme.appTypography.titleMedium
-                                )
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    modifier = Modifier.testTag("txt_wifi_only_description"),
-                                    text = stringResource(id = R.string.profile_only_download_when_wifi_turned_on),
-                                    color = MaterialTheme.appColors.textSecondary,
-                                    style = MaterialTheme.appTypography.labelMedium
-                                )
-                            }
-                            Switch(
-                                modifier = Modifier.testTag("sw_wifi_only"),
-                                checked = wifiDownloadOnly,
-                                onCheckedChange = {
-                                    wifiDownloadOnly = !wifiDownloadOnly
-                                    wifiDownloadChanged(wifiDownloadOnly)
-                                },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = MaterialTheme.appColors.primary,
-                                    checkedTrackColor = MaterialTheme.appColors.primary
-                                )
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            modifier = Modifier.testTag("txt_wifi_only_label"),
+                            text = stringResource(id = R.string.profile_wifi_only_download),
+                            style = TextStyle(
+                                fontFamily = ttRoundsFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 15.sp,
+                                color = MaterialTheme.appColors.textPrimary,
                             )
-                        }
-                        Divider()
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .height(92.dp)
-                                .clickable {
-                                    videoStreamingQualityClick()
-                                },
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(id = CoreR.string.core_video_streaming_quality),
-                                    color = MaterialTheme.appColors.textPrimary,
-                                    style = MaterialTheme.appTypography.titleMedium
-                                )
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    text = stringResource(id = videoSettings.videoStreamingQuality.titleResId),
-                                    color = MaterialTheme.appColors.textSecondary,
-                                    style = MaterialTheme.appTypography.labelMedium
-                                )
-                            }
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                tint = MaterialTheme.appColors.onSurface,
-                                contentDescription = stringResource(CoreR.string.core_accessibility_expandable_arrow)
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            modifier = Modifier.testTag("txt_wifi_only_description"),
+                            text = stringResource(id = R.string.profile_only_download_when_wifi_turned_on),
+                            style = TextStyle(
+                                fontFamily = ttRoundsFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 13.sp,
+                                color = MaterialTheme.appColors.textSecondary,
                             )
-                        }
-                        Divider()
-                        Row(
-                            Modifier
-                                .testTag("btn_video_quality")
-                                .fillMaxWidth()
-                                .height(92.dp)
-                                .clickable {
-                                    videoDownloadQualityClick()
-                                },
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(id = CoreR.string.core_video_download_quality),
-                                    color = MaterialTheme.appColors.textPrimary,
-                                    style = MaterialTheme.appTypography.titleMedium
-                                )
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    text = stringResource(id = videoSettings.videoDownloadQuality.titleResId),
-                                    color = MaterialTheme.appColors.textSecondary,
-                                    style = MaterialTheme.appTypography.labelMedium
-                                )
-                            }
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                tint = MaterialTheme.appColors.onSurface,
-                                contentDescription = stringResource(CoreR.string.core_accessibility_expandable_arrow)
-                            )
-                        }
-                        Divider()
+                        )
                     }
+                    Switch(
+                        modifier = Modifier.testTag("sw_wifi_only"),
+                        checked = wifiDownloadOnly,
+                        onCheckedChange = {
+                            wifiDownloadOnly = !wifiDownloadOnly
+                            wifiDownloadChanged(wifiDownloadOnly)
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = brand_green,
+                            checkedTrackColor = brand_green,
+                        )
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // Streaming quality card
+            VideoSettingCard(onClick = videoStreamingQualityClick) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(id = CoreR.string.core_video_streaming_quality),
+                            style = TextStyle(
+                                fontFamily = ttRoundsFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 15.sp,
+                                color = MaterialTheme.appColors.textPrimary,
+                            )
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(id = videoSettings.videoStreamingQuality.titleResId),
+                            style = TextStyle(
+                                fontFamily = ttRoundsFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 13.sp,
+                                color = MaterialTheme.appColors.textSecondary,
+                            )
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        tint = brand_green,
+                        contentDescription = null,
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // Download quality card
+            VideoSettingCard(onClick = videoDownloadQualityClick) {
+                Row(
+                    Modifier
+                        .testTag("btn_video_quality")
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(id = CoreR.string.core_video_download_quality),
+                            style = TextStyle(
+                                fontFamily = ttRoundsFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 15.sp,
+                                color = MaterialTheme.appColors.textPrimary,
+                            )
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(id = videoSettings.videoDownloadQuality.titleResId),
+                            style = TextStyle(
+                                fontFamily = ttRoundsFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 13.sp,
+                                color = MaterialTheme.appColors.textSecondary,
+                            )
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        tint = brand_green,
+                        contentDescription = null,
+                    )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun VideoSettingCard(
+    onClick: (() -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
+    androidx.compose.material.Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        elevation = 2.dp,
+        backgroundColor = androidx.compose.ui.graphics.Color.White,
+        content = { content() }
+    )
 }
 
 @Preview(uiMode = UI_MODE_NIGHT_NO)

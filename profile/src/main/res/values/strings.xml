@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="profile_settings_subtitle">Personaliza tu experiencia</string>
     <string name="profile_full_profile">Full profile</string>
     <string name="profile_limited_profile">Limited profile</string>
     <string name="profile_edit_profile">Edit Profile</string>
