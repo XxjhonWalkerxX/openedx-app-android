@@ -54,8 +54,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
@@ -110,10 +112,16 @@ import org.openedx.core.ui.OpenEdXOutlinedButton
 import org.openedx.core.ui.TextIcon
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.noRippleClickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.sp
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.theme.brand_cream
+import org.openedx.core.ui.theme.brand_cream_strong
+import org.openedx.core.ui.theme.brand_green
+import org.openedx.core.ui.theme.ttRoundsFamily
 import org.openedx.core.utils.TimeUtils
 import org.openedx.core.utils.VideoPreview
 import org.openedx.course.R
@@ -643,7 +651,6 @@ fun CourseVideoSection(
     onVideoClick: (Block) -> Unit,
     onDownloadClick: (blocksIds: List<String>) -> Unit,
 ) {
-    val state = rememberLazyListState()
     val subSectionIds = videoBlocks.map { it.id }
     val filteredStatuses = downloadedStateMap.filterKeys { it in subSectionIds }.values
     val downloadedState = when {
@@ -652,61 +659,175 @@ fun CourseVideoSection(
         filteredStatuses.any { it.isWaitingOrDownloading } -> DownloadedState.DOWNLOADING
         else -> DownloadedState.NOT_DOWNLOADED
     }
-    val videoCardWidth = 192.dp
-    val rowHorizontalArrangement = 8.dp
 
-    LaunchedEffect(Unit) {
-        try {
-            val uncompletedBlockIndex = videoBlocks.indexOf(videoBlocks.find { !it.isCompleted() })
-            state.scrollToItem(uncompletedBlockIndex)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    Column(
-        modifier = Modifier.padding(vertical = 8.dp)
-    ) {
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
         CourseVideoSectionHeader(
             block = block,
             downloadedState = downloadedState,
             videoBlocks = videoBlocks,
-            onDownloadClick = {
-                onDownloadClick(block.descendants)
-            }
+            onDownloadClick = { onDownloadClick(block.descendants) }
         )
-        LazyRow(
-            state = state,
-            horizontalArrangement = Arrangement.spacedBy(rowHorizontalArrangement),
-            contentPadding = PaddingValues(
-                top = 8.dp,
-                bottom = 16.dp,
-                start = 16.dp,
-                end = videoCardWidth + rowHorizontalArrangement,
-            )
-        ) {
-            items(videoBlocks) { block ->
-                val localProgress = progress[block.id]
-                val progress = localProgress ?: if (block.isCompleted()) {
-                    1f
-                } else {
-                    0f
-                }
-                CourseVideoItem(
-                    modifier = Modifier
-                        .width(videoCardWidth)
-                        .height(108.dp)
-                        .clip(MaterialTheme.appShapes.videoPreviewShape),
-                    videoBlock = block,
-                    preview = preview[block.id],
-                    progress = progress,
-                    onClick = {
-                        onVideoClick(block)
-                    }
+        Spacer(modifier = Modifier.height(4.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            videoBlocks.forEach { videoBlock ->
+                val localProgress = progress[videoBlock.id] ?: if (videoBlock.isCompleted()) 1f else 0f
+                CourseVideoListItem(
+                    videoBlock = videoBlock,
+                    preview = preview[videoBlock.id],
+                    progress = localProgress,
+                    onClick = { onVideoClick(videoBlock) },
                 )
             }
         }
+        Spacer(modifier = Modifier.height(8.dp))
         Divider(modifier = Modifier.fillMaxWidth())
+    }
+}
+
+@Composable
+private fun CourseVideoListItem(
+    videoBlock: Block,
+    preview: VideoPreview?,
+    progress: Float,
+    onClick: () -> Unit,
+) {
+    val isCompleted = videoBlock.isCompleted()
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(14.dp),
+        elevation = 2.dp,
+        backgroundColor = Color.White,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Thumbnail (90x70dp)
+            Box(
+                modifier = Modifier
+                    .width(90.dp)
+                    .height(70.dp)
+                    .clip(RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp))
+                    .background(if (isCompleted) Color(0xFF4A8E72) else brand_green),
+                contentAlignment = Alignment.Center,
+            ) {
+                // Load preview image if available
+                if (preview?.link != null || preview?.bitmap != null) {
+                    AsyncImage(
+                        modifier = Modifier.fillMaxSize(),
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(preview.link ?: preview.bitmap)
+                            .build(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                    )
+                    // Dark overlay
+                    Box(Modifier.fillMaxSize().background(Color.Black.copy(.35f)))
+                }
+                // Play circle
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(.2f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.PlayArrow,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+                // Completed badge
+                if (isCompleted) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(6.dp)
+                            .size(16.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(.9f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            tint = brand_green,
+                            modifier = Modifier.size(10.dp),
+                        )
+                    }
+                }
+            }
+
+            // Info
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    text = videoBlock.displayName,
+                    style = TextStyle(
+                        fontFamily = ttRoundsFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                    ),
+                    color = Color(0xFF19212F),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    if (isCompleted) {
+                        Text(
+                            text = "✓ Visto",
+                            style = TextStyle(
+                                fontFamily = ttRoundsFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 10.sp,
+                            ),
+                            color = brand_green,
+                        )
+                    }
+                    if (progress > 0f && !isCompleted) {
+                        // Thin progress bar
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(3.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(brand_cream_strong),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(progress)
+                                    .fillMaxHeight()
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(brand_green),
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Arrow
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = Color(0xFFCCCCCC),
+                modifier = Modifier
+                    .padding(end = 10.dp)
+                    .size(18.dp),
+            )
+        }
     }
 }
 
@@ -948,6 +1069,7 @@ fun DownloadIcon(
 fun CourseSection(
     modifier: Modifier = Modifier,
     section: Block,
+    sectionIndex: Int = 0,
     useRelativeDates: Boolean,
     showDueDate: Boolean = true,
     isExpandable: Boolean = true,
@@ -961,65 +1083,101 @@ fun CourseSection(
     background: Color = MaterialTheme.appColors.cardViewBackground
 ) {
     val arrowRotation by animateFloatAsState(
-        targetValue = if (isSectionVisible == true) {
-            -90f
-        } else {
-            90f
-        },
+        targetValue = if (isSectionVisible == true) 90f else 0f,
         label = ""
     )
-    val subSectionIds = subSections?.map { it.id }.orEmpty()
-    val filteredStatuses = downloadedStateMap.filterKeys { it in subSectionIds }.values
-    val downloadedState = when {
-        filteredStatuses.isEmpty() -> null
-        filteredStatuses.all { it.isDownloaded } -> DownloadedState.DOWNLOADED
-        filteredStatuses.any { it.isWaitingOrDownloading } -> DownloadedState.DOWNLOADING
-        else -> DownloadedState.NOT_DOWNLOADED
-    }
 
     // Section progress
     val completedCount = subSections?.count { it.isCompleted() } ?: 0
     val totalCount = subSections?.size ?: 0
-    val progress = progress ?: if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
+    val sectionProgress = progress ?: if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
 
-    Column(
-        modifier = modifier
-            .clip(MaterialTheme.appShapes.sectionCardShape)
-            .noRippleClickable { onItemClick(section) }
-            .background(background)
-            .border(
-                1.dp,
-                MaterialTheme.appColors.cardViewBorder,
-                MaterialTheme.appShapes.sectionCardShape
-            )
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        elevation = 2.dp,
+        backgroundColor = Color.White,
     ) {
-        LinearProgressIndicator(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(6.dp),
-            progress = progress,
-            color = MaterialTheme.appColors.progressBarColor,
-            backgroundColor = MaterialTheme.appColors.progressBarBackgroundColor
-        )
-        CourseExpandableChapterCard(
-            block = section,
-            arrowDegrees = arrowRotation,
-            isExpandable = isExpandable,
-            downloadedState = downloadedState,
-            onDownloadClick = {
-                onDownloadClick(section.descendants)
-            }
-        )
-        subSections?.forEach { subSectionBlock ->
-            AnimatedVisibility(
-                visible = isSectionVisible == true
+        Column {
+            // Barra de progreso superior (Option A)
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp),
+                progress = sectionProgress,
+                color = brand_green,
+                backgroundColor = brand_cream_strong
+            )
+            // Header: número + título + chevron
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .noRippleClickable { onItemClick(section) }
+                    .background(brand_green.copy(alpha = 0.07f))
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                CourseSubSectionItem(
-                    block = subSectionBlock,
-                    onClick = onSubSectionClick,
-                    showDueDate = showDueDate,
-                    useRelativeDates = useRelativeDates
+                // Badge número de sección
+                if (sectionIndex > 0) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(brand_green),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "$sectionIndex",
+                            color = Color.White,
+                            style = TextStyle(
+                                fontFamily = ttRoundsFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                            )
+                        )
+                    }
+                }
+                Text(
+                    modifier = Modifier.weight(1f),
+                    text = section.displayName,
+                    style = TextStyle(
+                        fontFamily = ttRoundsFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                    ),
+                    color = brand_green,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    tint = brand_green,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .rotate(arrowRotation),
+                    contentDescription = null
+                )
+            }
+            // Items (subsecciones) — estilo Notion (Option C)
+            subSections?.forEachIndexed { idx, subSectionBlock ->
+                AnimatedVisibility(visible = isSectionVisible == true) {
+                    Column {
+                        if (idx > 0) {
+                            Divider(
+                                color = brand_cream_strong,
+                                thickness = 1.dp,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
+                        CourseSubSectionItem(
+                            block = subSectionBlock,
+                            onClick = onSubSectionClick,
+                            showDueDate = showDueDate,
+                            useRelativeDates = useRelativeDates
+                        )
+                    }
+                }
             }
         }
     }
@@ -1082,82 +1240,78 @@ fun CourseSubSectionItem(
     onClick: (Block) -> Unit,
 ) {
     val context = LocalContext.current
-    val icon = if (block.isCompleted()) {
-        painterResource(R.drawable.course_ic_task_alt)
-    } else {
-        painterResource(coreR.drawable.core_ic_chapter_icon)
-    }
-    val iconColor = if (block.isCompleted()) {
-        MaterialTheme.appColors.successGreen
-    } else {
-        MaterialTheme.appColors.onSurface
-    }
     val due by rememberSaveable {
         mutableStateOf(
             block.due?.let { TimeUtils.formatToString(context, it, useRelativeDates) }
         )
     }
-    Column(
+    Row(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onClick(block) }
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Icon(
-                painter = icon,
-                contentDescription = null,
-                tint = iconColor
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                modifier = Modifier.weight(1f),
-                text = block.displayName,
-                style = MaterialTheme.appTypography.titleSmall,
-                color = MaterialTheme.appColors.textPrimary,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            if (due != null || showDueDate) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    tint = MaterialTheme.appColors.onSurface,
-                    contentDescription = null
-                )
-            }
-        }
-        val strings = listOf(
-            block.assignmentProgress?.assignmentType,
-            due?.let {
-                stringResource(
-                    id = coreR.string.core_date_format_assignment_due,
-                    it
-                )
-            },
-            block.assignmentProgress?.numPointsPossible?.let {
-                if (it > 0) {
-                    block.assignmentProgress?.toPointString(" ")
-                } else {
-                    null
-                }
-            }
+        // Dot indicador estilo Notion (Option C)
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .clip(CircleShape)
+                .background(if (block.isCompleted()) brand_green else Color.Transparent)
+                .border(1.5.dp, brand_green, CircleShape)
         )
-        val assignmentString = strings
-            .filter { !it.isNullOrEmpty() }
-            .joinToString(" - ")
-
-        if (assignmentString.isNotEmpty() && showDueDate) {
-            Spacer(modifier = Modifier.height(8.dp))
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = assignmentString,
-                style = MaterialTheme.appTypography.bodySmall,
-                color = MaterialTheme.appColors.textPrimary
+                text = block.displayName,
+                style = TextStyle(
+                    fontFamily = ttRoundsFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp,
+                ),
+                color = Color(0xFF19212F),
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 2
             )
+            val strings = listOf(
+                block.assignmentProgress?.assignmentType,
+                due?.let {
+                    stringResource(
+                        id = coreR.string.core_date_format_assignment_due,
+                        it
+                    )
+                },
+                block.assignmentProgress?.numPointsPossible?.let {
+                    if (it > 0) {
+                        block.assignmentProgress?.toPointString(" ")
+                    } else {
+                        null
+                    }
+                }
+            )
+            val assignmentString = strings
+                .filter { !it.isNullOrEmpty() }
+                .joinToString(" - ")
+            if (assignmentString.isNotEmpty() && showDueDate) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = assignmentString,
+                    style = TextStyle(
+                        fontFamily = ttRoundsFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.sp,
+                    ),
+                    color = MaterialTheme.appColors.textSecondary
+                )
+            }
         }
+        // Flecha de navegación
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            tint = brand_green,
+            modifier = Modifier.size(18.dp),
+            contentDescription = null
+        )
     }
 }
 
