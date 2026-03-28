@@ -89,6 +89,7 @@ import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.theme.brand_cream
 import org.openedx.core.utils.TimeUtils
 import org.openedx.course.DatesShiftedSnackBar
 import org.openedx.course.R
@@ -361,11 +362,13 @@ fun CourseDashboard(
                             .padding(paddingValues)
                             .pullRefresh(pullRefreshState),
                         courseImage = courseImage,
-                        imageHeight = 280,  // EMI: Aumentado de 200 (equivalente iOS: 550pts escalado)
+                        imageHeight = 450,
                         expandedTop = {
                             ExpandedHeaderContent(
                                 courseTitle = viewModel.courseName,
-                                org = viewModel.courseDetails?.courseInfoOverview?.org ?: ""
+                                org = viewModel.courseDetails?.courseInfoOverview?.org ?: "",
+                                end = viewModel.courseDetails?.courseInfoOverview?.end,
+                                isSelfPaced = viewModel.courseDetails?.courseInfoOverview?.isSelfPaced ?: false,
                             )
                         },
                         collapsedTop = {
@@ -728,7 +731,7 @@ private fun HomeNavigationRow(homePagerState: PagerState) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.appColors.background),
+            .background(brand_cream),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -791,7 +794,7 @@ private fun AssignmentsBottomBar(
     pagerState: PagerState
 ) {
     Column(
-        modifier = Modifier.background(MaterialTheme.appColors.background),
+        modifier = Modifier.background(brand_cream),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Divider(modifier = Modifier.fillMaxWidth())

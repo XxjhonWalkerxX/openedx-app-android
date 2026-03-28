@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
@@ -70,6 +72,8 @@ import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
+import org.openedx.core.ui.theme.brand_cream
+import org.openedx.core.ui.theme.brand_green
 import org.openedx.foundation.presentation.rememberWindowSize
 import kotlin.math.roundToInt
 
@@ -409,13 +413,13 @@ private fun CollapsingLayoutTablet(
         modifier = Modifier
             .statusBarsInset()
             .padding(top = 12.dp, start = backBtnStartPadding + 12.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.appColors.courseHomeBackBtnBackground)
-            .clickable {
-                onBackClick()
-            },
+            .size(40.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.2f))
+            .clickable { onBackClick() }
+            .padding(10.dp),
         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-        tint = MaterialTheme.appColors.textPrimary,
+        tint = Color.White,
         contentDescription = null
     )
 
@@ -559,12 +563,13 @@ private fun CollapsingLayoutMobile(
                 modifier = Modifier
                     .statusBarsInset()
                     .padding(top = 12.dp, start = backBtnStartPadding)
-                    .clip(CircleShape)
-                    .clickable {
-                        onBackClick()
-                    },
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White.copy(alpha = 0.2f))
+                    .clickable { onBackClick() }
+                    .padding(10.dp),
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                tint = MaterialTheme.appColors.textPrimary,
+                tint = Color.White,
                 contentDescription = stringResource(id = R.string.core_accessibility_btn_back)
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -607,48 +612,31 @@ private fun CollapsingLayoutMobile(
                 contentDescription = null,
                 contentScale = ContentScale.Crop
             )
+            // Vignette suave en el borde inferior de la imagen
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .offset(y = (imageHeight - 80).dp)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, brand_cream.copy(alpha = 0.7f))
+                        )
+                    )
+            )
+            // Fondo sólido brand_cream debajo de la imagen
             Box(
                 modifier = Modifier
                     .offset { IntOffset(x = 0, y = toolbarBackgroundOffset) }
-                    .background(Color.White)
-                    .blur(100.dp)
-            ) {
-                val adaptiveBlurImagePadding = blurImagePadding.value * (BLUR_PADDING_FACTOR - rawFactor)
-                Box(
-                    modifier = Modifier
-                        .background(MaterialTheme.appColors.surface)
-                        .fillMaxWidth()
-                        .height(
-                            with(localDensity) {
-                                (expandedTopHeight.value + navigationHeight.value + adaptiveBlurImagePadding).toDp()
-                            }
-                        )
-                        .align(Alignment.Center)
-                )
-                Image(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(blurImagePadding)
-                        .align(Alignment.TopCenter),
-                    bitmap = courseImage.asImageBitmap(),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    alignment = PixelAlignment(0f, blurImageAlignment),
-                )
-                Box(
-                    modifier = Modifier
-                        .background(MaterialTheme.appColors.courseHomeHeaderShade)
-                        .fillMaxWidth()
-                        .height(
-                            with(localDensity) {
-                                (expandedTopHeight.value + navigationHeight.value).toDp() * SHADE_HEIGHT_MULTIPLIER
-                            }
-                        )
-                        .align(Alignment.BottomCenter)
-                )
-            }
+                    .fillMaxWidth()
+                    .height(
+                        with(localDensity) {
+                            (expandedTopHeight.value + navigationHeight.value).toDp() + blurImagePadding
+                        }
+                    )
+                    .background(brand_cream)
+            )
         } else {
-            val backgroundColor = MaterialTheme.appColors.background
             Image(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -660,26 +648,19 @@ private fun CollapsingLayoutMobile(
                 contentDescription = null,
                 contentScale = ContentScale.Crop
             )
+            // Vignette suave en el borde inferior de la imagen
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(with(localDensity) { (expandedTopHeight.value + navigationHeight.value).toDp() })
-                    .offset { IntOffset(x = 0, y = backgroundImageHeight.value.roundToInt()) }
-                    .background(backgroundColor)
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(imageHeight.dp)
+                    .height(80.dp)
+                    .offset(y = (imageHeight - 80).dp)
                     .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(backgroundColor, Color.Transparent),
-                            startY = 500f,
-                            endY = 400f
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, brand_cream.copy(alpha = 0.7f))
                         )
-                    ),
+                    )
             )
+            // Fondo sólido brand_cream debajo de la imagen
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -691,16 +672,10 @@ private fun CollapsingLayoutMobile(
                     .offset {
                         IntOffset(
                             x = 0,
-                            y = (offset.value + backgroundImageHeight.value - blurImagePaddingPx).roundToInt()
+                            y = (backgroundImageHeight.value - blurImagePaddingPx).roundToInt()
                         )
                     }
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(backgroundColor, Color.Transparent),
-                            startY = 400f,
-                            endY = 0f
-                        )
-                    ),
+                    .background(brand_cream)
             )
         }
 
@@ -722,23 +697,25 @@ private fun CollapsingLayoutMobile(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(brand_cream.copy(alpha = (1f - factor).coerceIn(0f, 1f)))
                 .padding(horizontal = 12.dp)
                 .onSizeChanged { size ->
                     collapsedTopHeight.value = size.height.toFloat()
                 },
             verticalAlignment = Alignment.Bottom
         ) {
+            val iconTint = if (factor > 0.5f) Color.White else brand_green
             Icon(
                 modifier = Modifier
                     .statusBarsInset()
                     .padding(top = 12.dp, start = backBtnStartPadding)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.appColors.courseHomeBackBtnBackground.copy(factor / 2))
-                    .clickable {
-                        onBackClick()
-                    },
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White.copy(alpha = 0.2f * factor))
+                    .clickable { onBackClick() }
+                    .padding(10.dp),
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                tint = MaterialTheme.appColors.textPrimary,
+                tint = iconTint,
                 contentDescription = stringResource(id = R.string.core_accessibility_btn_back)
             )
             Spacer(modifier = Modifier.width(8.dp))
