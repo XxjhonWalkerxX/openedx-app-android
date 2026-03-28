@@ -70,8 +70,10 @@ import org.openedx.auth.R as AuthR
 import org.openedx.core.R as CoreR
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.brand_cream
-import org.openedx.core.ui.theme.brand_guinda
 import org.openedx.core.ui.theme.brand_green
+import org.openedx.core.ui.theme.brand_green_dark
+import org.openedx.core.ui.theme.brand_green_light
+import org.openedx.core.ui.theme.brand_guinda
 
 // ── Tipografía ────────────────────────────────────────────────────────────────
 private val frauncesFamily = FontFamily(
@@ -101,8 +103,8 @@ fun OnboardingScreen(
         ),
         label = "gradientProgress",
     )
-    val bgColor1 = lerp(Color(0xFF2B6959), Color(0xFF1D4D42), gradientProgress)
-    val bgColor2 = lerp(Color(0xFF3D8A72), Color(0xFF2B6959), gradientProgress)
+    val bgColor1 = lerp(brand_green, brand_green_dark, gradientProgress)
+    val bgColor2 = lerp(brand_green_light, brand_green, gradientProgress)
 
     LaunchedEffect(Unit) {
         launch { alpha.animateTo(1f, tween(500, easing = FastOutSlowInEasing)) }

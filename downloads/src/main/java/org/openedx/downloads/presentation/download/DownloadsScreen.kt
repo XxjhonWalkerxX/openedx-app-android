@@ -98,6 +98,8 @@ import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.theme.brand_cream
 import org.openedx.core.ui.theme.brand_guinda
+import org.openedx.core.ui.theme.brand_handle
+import org.openedx.core.ui.theme.heroGradientColors
 import org.openedx.core.ui.theme.ttRoundsFamily
 import org.openedx.downloads.R
 import org.openedx.foundation.extension.toFileSize
@@ -164,7 +166,7 @@ fun DownloadsScreen(
                                     .padding(top = 12.dp)
                                     .size(width = 36.dp, height = 4.dp)
                                     .clip(RoundedCornerShape(2.dp))
-                                    .background(Color(0xFFC8C3BA)),
+                                    .background(brand_handle),
                             )
                             if (uiState.isLoading) {
                                 Box(
@@ -295,11 +297,7 @@ private fun DownloadsHero(onSettingsClick: () -> Unit) {
             .fillMaxWidth()
             .background(
                 Brush.linearGradient(
-                    colors = listOf(
-                        Color(0xFF1D4D42),
-                        Color(0xFF2B6959),
-                        Color(0xFF3D8A72),
-                    ),
+                    colors = heroGradientColors,
                     start = Offset(0f, 0f),
                     end = Offset(Float.POSITIVE_INFINITY, 440f),
                 )
