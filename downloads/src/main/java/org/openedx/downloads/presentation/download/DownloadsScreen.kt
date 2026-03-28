@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -26,6 +27,12 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
@@ -37,12 +44,14 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.outlined.CloudDownload
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -77,7 +86,6 @@ import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.module.db.DownloadedState.LOADING_COURSE_STRUCTURE
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IconText
-import org.openedx.core.ui.MainToolbar
 import org.openedx.core.ui.OfflineModeDialog
 import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.OpenEdXDropdownMenuItem
@@ -88,6 +96,9 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.theme.brand_cream
+import org.openedx.core.ui.theme.brand_guinda
+import org.openedx.core.ui.theme.ttRoundsFamily
 import org.openedx.downloads.R
 import org.openedx.foundation.extension.toFileSize
 import org.openedx.foundation.extension.toImageLink
@@ -125,113 +136,125 @@ fun DownloadsScreen(
 
     Scaffold(
         scaffoldState = scaffoldState,
-        modifier = Modifier
-            .fillMaxSize(),
-        backgroundColor = MaterialTheme.appColors.background,
-        topBar = {
-            MainToolbar(
-                modifier = Modifier
-                    .statusBarsInset()
-                    .displayCutoutForLandscape(),
-                label = stringResource(id = R.string.downloads),
-                onSettingsClick = {
-                    onAction(DownloadsViewActions.OpenSettings)
-                }
-            )
-        },
+        modifier = Modifier.fillMaxSize(),
+        backgroundColor = brand_cream,
         content = { paddingValues ->
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(paddingValues)
                     .pullRefresh(pullRefreshState)
             ) {
-                if (uiState.isLoading) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = MaterialTheme.appColors.primary)
-                    }
-                } else if (uiState.downloadCoursePreviews.isEmpty()) {
-                    EmptyState(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
+                Column(modifier = Modifier.fillMaxSize()) {
+                    DownloadsHero(
+                        onSettingsClick = { onAction(DownloadsViewActions.OpenSettings) }
                     )
-                } else {
-                    Box(
+                    Surface(
                         modifier = Modifier
                             .fillMaxSize()
-                            .displayCutoutForLandscape()
-                            .padding(paddingValues)
-                            .padding(horizontal = 16.dp),
-                        contentAlignment = Alignment.TopCenter
+                            .offset(y = (-28).dp),
+                        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+                        color = brand_cream,
+                        elevation = 0.dp,
                     ) {
-                        if (configuration.orientation == ORIENTATION_LANDSCAPE || windowSize.isTablet) {
-                            LazyVerticalGrid(
-                                modifier = contentWidth.fillMaxHeight(),
-                                state = rememberLazyGridState(),
-                                columns = GridCells.Fixed(2),
-                                verticalArrangement = Arrangement.spacedBy(20.dp),
-                                horizontalArrangement = Arrangement.spacedBy(20.dp),
-                                contentPadding = PaddingValues(bottom = 46.dp, top = 12.dp),
-                                content = {
-                                    items(uiState.downloadCoursePreviews) { item ->
-                                        val downloadModels =
-                                            uiState.downloadModels.filter { it.courseId == item.id }
-                                        val downloadState = uiState.courseDownloadState[item.id]
-                                            ?: DownloadedState.NOT_DOWNLOADED
-                                        CourseItem(
-                                            modifier = Modifier.height(314.dp),
-                                            downloadCoursePreview = item,
-                                            downloadModels = downloadModels,
-                                            downloadedState = downloadState,
-                                            apiHostUrl = apiHostUrl,
-                                            onCourseClick = {
-                                                onAction(DownloadsViewActions.OpenCourse(item.id))
-                                            },
-                                            onDownloadClick = {
-                                                onAction(DownloadsViewActions.DownloadCourse(item.id))
-                                            },
-                                            onCancelClick = {
-                                                onAction(DownloadsViewActions.CancelDownloading(item.id))
-                                            },
-                                            onRemoveClick = {
-                                                onAction(DownloadsViewActions.RemoveDownloads(item.id))
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.CenterHorizontally)
+                                    .padding(top = 12.dp)
+                                    .size(width = 36.dp, height = 4.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(Color(0xFFC8C3BA)),
+                            )
+                            if (uiState.isLoading) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                                }
+                            } else if (uiState.downloadCoursePreviews.isEmpty()) {
+                                EmptyState(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .verticalScroll(rememberScrollState())
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .displayCutoutForLandscape()
+                                        .padding(horizontal = 16.dp),
+                                    contentAlignment = Alignment.TopCenter
+                                ) {
+                                    if (configuration.orientation == ORIENTATION_LANDSCAPE || windowSize.isTablet) {
+                                        LazyVerticalGrid(
+                                            modifier = contentWidth.fillMaxHeight(),
+                                            state = rememberLazyGridState(),
+                                            columns = GridCells.Fixed(2),
+                                            verticalArrangement = Arrangement.spacedBy(20.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(20.dp),
+                                            contentPadding = PaddingValues(bottom = 46.dp, top = 12.dp),
+                                            content = {
+                                                items(uiState.downloadCoursePreviews) { item ->
+                                                    val downloadModels =
+                                                        uiState.downloadModels.filter { it.courseId == item.id }
+                                                    val downloadState = uiState.courseDownloadState[item.id]
+                                                        ?: DownloadedState.NOT_DOWNLOADED
+                                                    CourseItem(
+                                                        modifier = Modifier.height(314.dp),
+                                                        downloadCoursePreview = item,
+                                                        downloadModels = downloadModels,
+                                                        downloadedState = downloadState,
+                                                        apiHostUrl = apiHostUrl,
+                                                        onCourseClick = {
+                                                            onAction(DownloadsViewActions.OpenCourse(item.id))
+                                                        },
+                                                        onDownloadClick = {
+                                                            onAction(DownloadsViewActions.DownloadCourse(item.id))
+                                                        },
+                                                        onCancelClick = {
+                                                            onAction(DownloadsViewActions.CancelDownloading(item.id))
+                                                        },
+                                                        onRemoveClick = {
+                                                            onAction(DownloadsViewActions.RemoveDownloads(item.id))
+                                                        }
+                                                    )
+                                                }
                                             }
                                         )
-                                    }
-                                }
-                            )
-                        } else {
-                            LazyColumn(
-                                modifier = contentWidth,
-                                contentPadding = PaddingValues(bottom = 46.dp, top = 12.dp),
-                                verticalArrangement = Arrangement.spacedBy(20.dp)
-                            ) {
-                                items(uiState.downloadCoursePreviews) { item ->
-                                    val downloadModels =
-                                        uiState.downloadModels.filter { it.courseId == item.id }
-                                    val downloadState = uiState.courseDownloadState[item.id]
-                                        ?: DownloadedState.NOT_DOWNLOADED
-                                    CourseItem(
-                                        downloadCoursePreview = item,
-                                        downloadModels = downloadModels,
-                                        downloadedState = downloadState,
-                                        apiHostUrl = apiHostUrl,
-                                        onCourseClick = {
-                                            onAction(DownloadsViewActions.OpenCourse(item.id))
-                                        },
-                                        onDownloadClick = {
-                                            onAction(DownloadsViewActions.DownloadCourse(item.id))
-                                        },
-                                        onCancelClick = {
-                                            onAction(DownloadsViewActions.CancelDownloading(item.id))
-                                        },
-                                        onRemoveClick = {
-                                            onAction(DownloadsViewActions.RemoveDownloads(item.id))
+                                    } else {
+                                        LazyColumn(
+                                            modifier = contentWidth,
+                                            contentPadding = PaddingValues(bottom = 46.dp, top = 12.dp),
+                                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                                        ) {
+                                            items(uiState.downloadCoursePreviews) { item ->
+                                                val downloadModels =
+                                                    uiState.downloadModels.filter { it.courseId == item.id }
+                                                val downloadState = uiState.courseDownloadState[item.id]
+                                                    ?: DownloadedState.NOT_DOWNLOADED
+                                                CourseItem(
+                                                    downloadCoursePreview = item,
+                                                    downloadModels = downloadModels,
+                                                    downloadedState = downloadState,
+                                                    apiHostUrl = apiHostUrl,
+                                                    onCourseClick = {
+                                                        onAction(DownloadsViewActions.OpenCourse(item.id))
+                                                    },
+                                                    onDownloadClick = {
+                                                        onAction(DownloadsViewActions.DownloadCourse(item.id))
+                                                    },
+                                                    onCancelClick = {
+                                                        onAction(DownloadsViewActions.CancelDownloading(item.id))
+                                                    },
+                                                    onRemoveClick = {
+                                                        onAction(DownloadsViewActions.RemoveDownloads(item.id))
+                                                    }
+                                                )
+                                            }
                                         }
-                                    )
+                                    }
                                 }
                             }
                         }
@@ -265,6 +288,65 @@ fun DownloadsScreen(
     )
 }
 
+@Composable
+private fun DownloadsHero(onSettingsClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF1D4D42),
+                        Color(0xFF2B6959),
+                        Color(0xFF3D8A72),
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(Float.POSITIVE_INFINITY, 440f),
+                )
+            )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .background(brand_guinda)
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsInset()
+                .displayCutoutForLandscape()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 20.dp),
+            ) {
+                Text(
+                    modifier = Modifier.align(Alignment.CenterStart),
+                    text = stringResource(id = R.string.downloads),
+                    style = TextStyle(
+                        fontFamily = ttRoundsFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp,
+                        color = Color.White,
+                    )
+                )
+                IconButton(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    onClick = onSettingsClick
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Settings,
+                        contentDescription = null,
+                        tint = Color.White,
+                    )
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun CourseItem(
@@ -290,9 +372,9 @@ private fun CourseItem(
     Card(
         modifier = modifier
             .fillMaxWidth(),
-        backgroundColor = MaterialTheme.appColors.background,
-        shape = MaterialTheme.appShapes.courseImageShape,
-        elevation = 4.dp,
+        backgroundColor = Color.White,
+        shape = RoundedCornerShape(16.dp),
+        elevation = 2.dp,
         onClick = onCourseClick
     ) {
         Box {
