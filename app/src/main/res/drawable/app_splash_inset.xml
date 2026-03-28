@@ -1,6 +1,6 @@
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:drawable="@mipmap/ic_launcher_round"
-    android:insetLeft="72dp"
-    android:insetRight="72dp"
-    android:insetTop="72dp"
-    android:insetBottom="72dp"/>
+    android:drawable="@drawable/aprende_logo_marquesina"
+    android:insetLeft="32dp"
+    android:insetRight="32dp"
+    android:insetTop="40dp"
+    android:insetBottom="40dp"/>
