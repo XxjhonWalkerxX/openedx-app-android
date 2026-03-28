@@ -192,7 +192,7 @@ private fun DiscussionTopicsUI(
                                                 modifier = Modifier,
                                                 text = stringResource(id = R.string.discussion_main_categories),
                                                 style = MaterialTheme.appTypography.titleMedium,
-                                                color = MaterialTheme.appColors.textPrimaryVariant
+                                                color = MaterialTheme.appColors.primary
                                             )
                                         }
                                         item {
@@ -240,7 +240,7 @@ private fun DiscussionTopicsUI(
                                                     ),
                                                     text = topic.name,
                                                     style = MaterialTheme.appTypography.titleMedium,
-                                                    color = MaterialTheme.appColors.textPrimaryVariant
+                                                    color = MaterialTheme.appColors.primary
                                                 )
                                             } else {
                                                 TopicItem(topic = topic, onClick = { id, title ->
