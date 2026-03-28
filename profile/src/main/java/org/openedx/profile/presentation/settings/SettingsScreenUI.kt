@@ -76,6 +76,7 @@ import org.openedx.core.ui.theme.brand_cream
 import org.openedx.core.ui.theme.brand_cream_strong
 import org.openedx.core.ui.theme.brand_green
 import org.openedx.core.ui.theme.brand_guinda
+import org.openedx.core.ui.theme.heroGradientColors
 import org.openedx.core.ui.theme.ttRoundsFamily
 import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.WindowType
@@ -83,11 +84,6 @@ import org.openedx.foundation.presentation.windowSizeValue
 import org.openedx.profile.domain.model.Configuration
 import org.openedx.profile.R as profileR
 
-private val settingsHeroGradient = listOf(
-    Color(0xFF1D4D42),
-    Color(0xFF2B6959),
-    Color(0xFF3D8A72),
-)
 
 @Composable
 internal fun SettingsScreen(
@@ -120,7 +116,7 @@ internal fun SettingsScreen(
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        colors = settingsHeroGradient,
+                        colors = heroGradientColors,
                         start = Offset(0f, 0f),
                         end = Offset(Float.POSITIVE_INFINITY, 440f),
                     )

@@ -61,6 +61,8 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.brand_cream
 import org.openedx.core.ui.theme.brand_green
 import org.openedx.core.ui.theme.brand_guinda
+import org.openedx.core.ui.theme.brand_handle
+import org.openedx.core.ui.theme.heroGradientColors
 import org.openedx.core.ui.theme.ttRoundsCompressedMedium
 import org.openedx.core.ui.theme.ttRoundsCompressedThinItalic
 import org.openedx.core.ui.theme.ttRoundsFamily
@@ -73,11 +75,6 @@ import org.openedx.profile.presentation.ui.ProfileInfoSection
 import org.openedx.profile.presentation.ui.mockAccount
 import org.openedx.profile.R as ProfileR
 
-private val profileHeroGradient = listOf(
-    Color(0xFF1D4D42),
-    Color(0xFF2B6959),
-    Color(0xFF3D8A72),
-)
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -150,7 +147,7 @@ internal fun ProfileView(
                                         .padding(top = 12.dp)
                                         .size(width = 36.dp, height = 4.dp)
                                         .clip(RoundedCornerShape(2.dp))
-                                        .background(Color(0xFFC8C3BA)),
+                                        .background(brand_handle),
                                 )
 
                                 Spacer(modifier = Modifier.height(20.dp))
@@ -218,7 +215,7 @@ private fun ProfileHero(
                 .matchParentSize()
                 .background(
                     Brush.linearGradient(
-                        colors = profileHeroGradient,
+                        colors = heroGradientColors,
                         start = Offset(0f, 0f),
                         end = Offset(Float.POSITIVE_INFINITY, 440f),
                     )
