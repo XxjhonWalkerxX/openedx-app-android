@@ -1,4 +1,5 @@
 <resources>
+    <string name="app_name" translatable="false">Cursos @prende.mx</string>
     <string name="app_navigation_discovery">Discover</string>
     <string name="app_navigation_learn">Learn</string>
     <string name="app_navigation_profile">Profile</string>
