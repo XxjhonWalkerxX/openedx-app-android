@@ -106,7 +106,9 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.brand_cream
 import org.openedx.core.ui.theme.brand_green
+import org.openedx.core.ui.theme.brand_green_dark
 import org.openedx.core.ui.theme.brand_guinda
+import org.openedx.core.ui.theme.heroGradientColors
 import org.openedx.core.ui.theme.ttRoundsCompressedMedium
 import org.openedx.core.ui.theme.ttRoundsCompressedThinItalic
 import org.openedx.core.ui.theme.ttRoundsFamily
@@ -121,7 +123,6 @@ import java.util.Date
 import org.openedx.core.R as CoreR
 
 // ── Paleta interna ────────────────────────────────────────────────────────────
-private val heroGradient = listOf(Color(0xFF1D4D42), Color(0xFF2B6959), Color(0xFF3D8A72))
 private val accentColors = listOf(
     Color(0xFF611232), // guinda
     Color(0xFF2B6959), // green
@@ -197,7 +198,7 @@ private fun DashboardGalleryView(
     Scaffold(
         scaffoldState = scaffoldState,
         modifier = Modifier.fillMaxSize().navigationBarsPadding(),
-        backgroundColor = Color(0xFF1D4D42), // green shows behind hero while loading
+        backgroundColor = brand_green_dark,
     ) { paddingValues ->
 
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
@@ -336,7 +337,7 @@ private fun DashboardHero(
                 .matchParentSize()
                 .background(
                     Brush.linearGradient(
-                        colors = heroGradient,
+                        colors = heroGradientColors,
                         start = Offset(0f, 0f),
                         end = Offset(Float.POSITIVE_INFINITY, 440f),
                     )

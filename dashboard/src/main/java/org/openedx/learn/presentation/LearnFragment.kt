@@ -54,6 +54,7 @@ import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.theme.brand_green_dark
 import org.openedx.dashboard.R
 import org.openedx.dashboard.databinding.FragmentLearnBinding
 import org.openedx.foundation.presentation.rememberWindowSize
@@ -138,7 +139,7 @@ private fun Header(
         }
         Column(
             modifier = Modifier
-                .background(Color(0xFF1D4D42))
+                .background(brand_green_dark)
                 .displayCutoutForLandscape()
                 .then(contentWidth),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -243,7 +244,7 @@ private fun HeaderPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp)
-                .background(Color(0xFF1D4D42)),
+                .background(brand_green_dark),
             contentAlignment = Alignment.CenterEnd,
         ) {
             Box(
