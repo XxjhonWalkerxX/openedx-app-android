@@ -6,12 +6,18 @@ import androidx.compose.ui.graphics.Color
 // COLORES INSTITUCIONALES EMI
 // (Equivalentes a AccentColor, brandColors en iOS)
 // ==========================================
-val brand_green = Color(0xFF2B6959)        // Verde institucional (Primary/Accent)
-val brand_cream = Color(0xFFECE9E4)        // Crema claro (Fondo general)
+val brand_green_dark  = Color(0xFF1D4D42)  // Verde oscuro (gradiente inicio)
+val brand_green       = Color(0xFF2B6959)  // Verde institucional (Primary/Accent)
+val brand_green_light = Color(0xFF3D8A72)  // Verde claro (gradiente fin)
+val brand_cream       = Color(0xFFECE9E4)  // Crema claro (Fondo general)
 val brand_cream_strong = Color(0xFFDFD4C2) // Crema fuerte (Cards, Headers)
-val brand_guinda = Color(0xFF611232)       // Guinda institucional (Llave MX)
-val accent_orange = Color(0xFFE07B39)      // Acento cards (carrusel rotativo)
-val accent_pink = Color(0xFFD94F7C)        // Acento cards (carrusel rotativo)
+val brand_guinda      = Color(0xFF611232)  // Guinda institucional (Llave MX)
+val brand_handle      = Color(0xFFC8C3BA)  // Drag handle decorativo (superficies)
+val accent_orange     = Color(0xFFE07B39)  // Acento cards (carrusel rotativo)
+val accent_pink       = Color(0xFFD94F7C)  // Acento cards (carrusel rotativo)
+
+// Gradiente hero verde — referencia única para todas las pantallas con hero header
+val heroGradientColors = listOf(brand_green_dark, brand_green, brand_green_light)
 
 // ==========================================
 // TEMA CLARO - Personalizado EMI
