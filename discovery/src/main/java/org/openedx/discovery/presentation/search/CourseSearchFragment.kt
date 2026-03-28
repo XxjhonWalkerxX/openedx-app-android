@@ -80,7 +80,9 @@ import org.openedx.core.ui.shouldLoadMore
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.brand_cream
 import org.openedx.core.ui.theme.brand_green
+import org.openedx.core.ui.theme.brand_green_dark
 import org.openedx.core.ui.theme.brand_guinda
+import org.openedx.core.ui.theme.heroGradientColors
 import org.openedx.core.ui.theme.ttRoundsCompressedMedium
 import org.openedx.core.ui.theme.ttRoundsCompressedThinItalic
 import org.openedx.core.ui.theme.ttRoundsFamily
@@ -94,15 +96,10 @@ import org.openedx.foundation.presentation.WindowType
 import org.openedx.foundation.presentation.rememberWindowSize
 
 private val searchAccentColors = listOf(
-    Color(0xFF2B6959),
+    brand_green,
     Color(0xFF611232),
     Color(0xFF3D3020),
-    Color(0xFF1D4D42),
-)
-private val searchHeroGradient = listOf(
-    Color(0xFF1D4D42),
-    Color(0xFF2B6959),
-    Color(0xFF3D8A72),
+    brand_green_dark,
 )
 private val searchHeroHeight = 160.dp
 private val heroOverlap = 28.dp
@@ -443,7 +440,7 @@ private fun SearchHeroBackground(modifier: Modifier) {
                 .matchParentSize()
                 .background(
                     Brush.linearGradient(
-                        colors = searchHeroGradient,
+                        colors = heroGradientColors,
                         start = Offset(0f, 0f),
                         end = Offset(Float.POSITIVE_INFINITY, 320f),
                     )
