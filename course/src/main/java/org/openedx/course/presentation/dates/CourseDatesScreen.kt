@@ -9,17 +9,15 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,8 +25,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
+import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
@@ -36,6 +36,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
@@ -54,11 +55,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentManager
 import org.openedx.core.NoContentScreenType
 import org.openedx.core.data.model.DateType
@@ -75,7 +79,10 @@ import org.openedx.core.ui.NoContentScreen
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.theme.brand_cream_strong
+import org.openedx.core.ui.theme.brand_green
+import org.openedx.core.ui.theme.brand_guinda
+import org.openedx.core.ui.theme.ttRoundsFamily
 import org.openedx.core.utils.TimeUtils
 import org.openedx.core.utils.TimeUtils.formatToString
 import org.openedx.core.utils.clearTime
@@ -87,8 +94,22 @@ import org.openedx.foundation.presentation.UIMessage
 import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.WindowType
 import org.openedx.foundation.presentation.windowSizeValue
+import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 import org.openedx.core.R as CoreR
+
+// ─── Color helpers ───────────────────────────────────────────────
+private fun sectionChipColor(section: DatesSection): Color = when (section) {
+    DatesSection.TODAY      -> brand_green
+    DatesSection.THIS_WEEK  -> Color(0xFF4A8E72)
+    DatesSection.NEXT_WEEK  -> Color(0xFF7B9E87)
+    DatesSection.UPCOMING   -> brand_guinda
+    DatesSection.PAST_DUE   -> Color(0xFFC0392B)
+    DatesSection.COMPLETED  -> Color(0xFF999999)
+    else                    -> brand_green
+}
 
 @Composable
 fun CourseDatesScreen(
@@ -231,17 +252,15 @@ private fun CourseDatesUI(
                 modifier = modifierScreenWidth,
                 color = MaterialTheme.appColors.background,
             ) {
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                ) {
+                Box(Modifier.fillMaxWidth()) {
                     when (uiState) {
                         is CourseDatesUIState.CourseDates -> {
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(horizontal = 16.dp),
-                                contentPadding = listBottomPadding
+                                contentPadding = listBottomPadding,
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
                                 val courseBanner = uiState.courseDatesResult.courseBanner
                                 val datesSection = uiState.courseDatesResult.datesSection
@@ -264,52 +283,16 @@ private fun CourseDatesUI(
                                     }
                                 }
 
-                                // Handle calendar sync state
+                                // Calendar sync card
                                 item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 16.dp)
-                                            .background(
-                                                MaterialTheme.appColors.cardViewBackground,
-                                                MaterialTheme.shapes.medium
-                                            )
-                                            .border(
-                                                0.75.dp,
-                                                MaterialTheme.appColors.cardViewBorder,
-                                                MaterialTheme.shapes.medium
-                                            )
-                                            .clickable {
-                                                onCalendarSyncStateClick()
-                                            }
-                                    ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(
-                                                    top = 8.dp,
-                                                    start = 16.dp,
-                                                    end = 8.dp,
-                                                    bottom = 8.dp
-                                                ),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Icon(
-                                                imageVector = uiState.calendarSyncState.icon,
-                                                tint = uiState.calendarSyncState.tint,
-                                                contentDescription = null
-                                            )
-                                            Text(
-                                                text = stringResource(uiState.calendarSyncState.longTitle),
-                                                style = MaterialTheme.appTypography.labelLarge,
-                                                color = MaterialTheme.appColors.textDark
-                                            )
-                                        }
-                                    }
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    CalendarSyncCard(
+                                        calendarSyncState = uiState.calendarSyncState,
+                                        onClick = onCalendarSyncStateClick,
+                                    )
                                 }
 
-                                // Handle DatesSection.COMPLETED separately
+                                // Completed section (expandable)
                                 datesSection[DatesSection.COMPLETED]?.isNotEmptyThenLet { section ->
                                     item {
                                         ExpandableView(
@@ -321,7 +304,7 @@ private fun CourseDatesUI(
                                     }
                                 }
 
-                                // Handle other sections
+                                // Other sections
                                 val sectionsKey =
                                     datesSection.keys.minus(DatesSection.COMPLETED).toList()
                                 sectionsKey.forEach { sectionKey ->
@@ -353,6 +336,125 @@ private fun CourseDatesUI(
     }
 }
 
+// ─── Calendar sync card ──────────────────────────────────────────
+@Composable
+private fun CalendarSyncCard(
+    calendarSyncState: CalendarSyncState,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(14.dp),
+        elevation = 2.dp,
+        backgroundColor = Color.White,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            // Icon wrap
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(brand_cream_strong),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = calendarSyncState.icon,
+                    tint = calendarSyncState.tint,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            // Text
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(calendarSyncState.longTitle),
+                    style = TextStyle(
+                        fontFamily = ttRoundsFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                    ),
+                    color = Color(0xFF19212F),
+                )
+                Text(
+                    text = "Toca para sincronizar fechas",
+                    style = TextStyle(
+                        fontFamily = ttRoundsFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 11.sp,
+                    ),
+                    color = Color(0xFF888888),
+                )
+            }
+            // Status pill
+            val (pillBg, pillText) = when (calendarSyncState) {
+                CalendarSyncState.SYNCED ->
+                    brand_green.copy(alpha = 0.12f) to brand_green
+                else ->
+                    Color(0xFF888888).copy(alpha = 0.12f) to Color(0xFF888888)
+            }
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(pillBg)
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+            ) {
+                Text(
+                    text = if (calendarSyncState == CalendarSyncState.SYNCED) "Sync" else "Offline",
+                    style = TextStyle(
+                        fontFamily = ttRoundsFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 10.sp,
+                        letterSpacing = 0.5.sp,
+                    ),
+                    color = pillText,
+                )
+            }
+        }
+    }
+}
+
+// ─── Section divider header ───────────────────────────────────────
+@Composable
+private fun DatesSectionHeader(title: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(1.dp)
+                .background(brand_guinda.copy(alpha = 0.22f))
+        )
+        Text(
+            text = title.uppercase(),
+            color = brand_guinda,
+            style = TextStyle(
+                fontFamily = ttRoundsFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 9.5.sp,
+                letterSpacing = 1.4.sp,
+            ),
+        )
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(1.dp)
+                .background(brand_guinda.copy(alpha = 0.22f))
+        )
+    }
+}
+
+// ─── Expandable "Completed" card ─────────────────────────────────
 @Composable
 fun ExpandableView(
     sectionKey: DatesSection = DatesSection.NONE,
@@ -361,7 +463,6 @@ fun ExpandableView(
     onItemClick: (CourseDateBlock) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    // expandable view Animation
     val transition = updateTransition(targetState = expanded, label = "expandable")
     val iconRotationDeg by transition.animateFloat(label = "icon rotation") { if (it) 180f else 0f }
     val enterTransition = remember {
@@ -376,77 +477,100 @@ fun ExpandableView(
             animationSpec = tween(durationMillis = 300)
         ) + fadeOut(animationSpec = tween(durationMillis = 300))
     }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp)
-            .background(MaterialTheme.appColors.cardViewBackground, MaterialTheme.shapes.medium)
-            .border(0.75.dp, MaterialTheme.appColors.cardViewBorder, MaterialTheme.shapes.medium)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp, start = 16.dp, end = 8.dp, bottom = 8.dp)
-                .clickable { expanded = !expanded }
-        ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .background(Color.Transparent)
-            ) {
-                Text(
-                    text = stringResource(id = sectionKey.stringResId),
-                    style = MaterialTheme.appTypography.titleMedium,
-                    color = MaterialTheme.appColors.textDark,
-                    modifier = Modifier.fillMaxWidth()
-                )
 
-                AnimatedVisibility(visible = expanded.not()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        elevation = 0.dp,
+        backgroundColor = brand_cream_strong,
+        border = BorderStroke(1.5.dp, brand_green.copy(alpha = 0.20f)),
+    ) {
+        Column {
+            // Header row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(9.dp))
+                        .background(brand_green.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        tint = brand_green,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = pluralStringResource(
-                            id = CoreR.plurals.core_date_items_hidden,
-                            count = sectionDates.size,
-                            formatArgs = arrayOf(sectionDates.size)
+                        text = stringResource(id = sectionKey.stringResId),
+                        style = TextStyle(
+                            fontFamily = ttRoundsFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
                         ),
-                        style = MaterialTheme.appTypography.labelMedium,
-                        color = MaterialTheme.appColors.textDark,
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        color = Color(0xFF19212F),
+                    )
+                    AnimatedVisibility(visible = !expanded) {
+                        Text(
+                            text = pluralStringResource(
+                                id = CoreR.plurals.core_date_items_hidden,
+                                count = sectionDates.size,
+                                formatArgs = arrayOf(sectionDates.size)
+                            ),
+                            style = TextStyle(
+                                fontFamily = ttRoundsFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 11.sp,
+                            ),
+                            color = Color(0xFF888888),
+                        )
+                    }
+                }
+                Icon(
+                    imageVector = Icons.Filled.KeyboardArrowUp,
+                    tint = brand_green,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(22.dp)
+                        .rotate(iconRotationDeg),
+                )
+            }
+
+            // Expandable content
+            AnimatedVisibility(
+                visible = expanded,
+                enter = enterTransition,
+                exit = exitTransition,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+                ) {
+                    Divider(color = brand_green.copy(alpha = 0.15f))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    CourseDateBlockSection(
+                        sectionKey = sectionKey,
+                        sectionDates = sectionDates,
+                        onItemClick = onItemClick,
+                        useRelativeDates = useRelativeDates,
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(16.dp))
-            Icon(
-                imageVector = Icons.Filled.KeyboardArrowUp,
-                tint = MaterialTheme.appColors.textDark,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(24.dp)
-                    .rotate(iconRotationDeg)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        AnimatedVisibility(
-            visible = expanded,
-            enter = enterTransition,
-            exit = exitTransition,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(MaterialTheme.shapes.medium)
-                .padding(top = 52.dp, bottom = 8.dp)
-        ) {
-            CourseDateBlockSection(
-                sectionKey = sectionKey,
-                sectionDates = sectionDates,
-                onItemClick = onItemClick,
-                useRelativeDates = useRelativeDates
-            )
         }
     }
 }
 
+// ─── Section wrapper ──────────────────────────────────────────────
 @Composable
 private fun CourseDateBlockSection(
     sectionKey: DatesSection = DatesSection.NONE,
@@ -454,166 +578,166 @@ private fun CourseDateBlockSection(
     sectionDates: List<CourseDateBlock>,
     onItemClick: (CourseDateBlock) -> Unit,
 ) {
-    Column(modifier = Modifier.padding(start = 8.dp)) {
-        if (sectionKey != DatesSection.COMPLETED) {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp, bottom = 4.dp),
-                text = stringResource(id = sectionKey.stringResId),
-                color = MaterialTheme.appColors.textDark,
-                style = MaterialTheme.appTypography.titleMedium,
-            )
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(intrinsicSize = IntrinsicSize.Min) // this make height of all cards to the tallest card.
-        ) {
-            if (sectionKey != DatesSection.COMPLETED) {
-                DateBullet(section = sectionKey)
-            }
-            DateBlock(dateBlocks = sectionDates, onItemClick = onItemClick, useRelativeDates = useRelativeDates)
-        }
-    }
-}
+    val chipColor = sectionChipColor(sectionKey)
 
-@Composable
-private fun DateBullet(
-    section: DatesSection = DatesSection.NONE,
-) {
-    val barColor = when (section) {
-        DatesSection.COMPLETED -> MaterialTheme.appColors.cardViewBackground
-        DatesSection.PAST_DUE -> MaterialTheme.appColors.datesSectionBarPastDue
-        DatesSection.TODAY -> MaterialTheme.appColors.datesSectionBarToday
-        DatesSection.THIS_WEEK -> MaterialTheme.appColors.datesSectionBarThisWeek
-        DatesSection.NEXT_WEEK -> MaterialTheme.appColors.datesSectionBarNextWeek
-        DatesSection.UPCOMING -> MaterialTheme.appColors.datesSectionBarUpcoming
-        else -> MaterialTheme.appColors.background
-    }
-    Box(
-        modifier = Modifier
-            .width(8.dp)
-            .fillMaxHeight()
-            .padding(top = 2.dp, bottom = 2.dp)
-            .background(
-                color = barColor,
-                shape = MaterialTheme.shapes.medium
-            )
-    )
-}
-
-@Composable
-private fun DateBlock(
-    dateBlocks: List<CourseDateBlock>,
-    useRelativeDates: Boolean,
-    onItemClick: (CourseDateBlock) -> Unit,
-) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .padding(start = 8.dp, end = 8.dp),
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        var lastAssignmentDate = dateBlocks.first().date.clearTime()
-        dateBlocks.forEachIndexed { index, dateBlock ->
-            var canShowDate = index == 0
-            if (index != 0) {
-                canShowDate = (lastAssignmentDate != dateBlock.date)
-            }
-            CourseDateItem(dateBlock, canShowDate, index != 0, useRelativeDates, onItemClick)
-            lastAssignmentDate = dateBlock.date
+        if (sectionKey != DatesSection.COMPLETED) {
+            DatesSectionHeader(title = stringResource(id = sectionKey.stringResId))
+        }
+
+        var lastDate = sectionDates.first().date.clearTime()
+        sectionDates.forEachIndexed { index, dateBlock ->
+            val canShowDate = index == 0 || lastDate != dateBlock.date
+            DateItemCard(
+                dateBlock = dateBlock,
+                chipColor = chipColor,
+                canShowDate = canShowDate,
+                useRelativeDates = useRelativeDates,
+                onItemClick = onItemClick,
+            )
+            lastDate = dateBlock.date
         }
     }
 }
 
+// ─── Date item card ───────────────────────────────────────────────
 @Composable
-private fun CourseDateItem(
+private fun DateItemCard(
     dateBlock: CourseDateBlock,
+    chipColor: Color,
     canShowDate: Boolean,
-    isMiddleChild: Boolean,
     useRelativeDates: Boolean,
     onItemClick: (CourseDateBlock) -> Unit,
 ) {
     val context = LocalContext.current
-    Column(
+
+    // Parse day + month abbreviation
+    val calendar = remember(dateBlock.date) {
+        Calendar.getInstance().apply { time = dateBlock.date }
+    }
+    val dayNum = calendar.get(Calendar.DAY_OF_MONTH).toString()
+    val monthAbbr = remember(dateBlock.date) {
+        SimpleDateFormat("MMM", Locale.forLanguageTag("es"))
+            .format(dateBlock.date)
+            .uppercase()
+    }
+
+    val isClickable = dateBlock.blockId.isNotEmpty() && dateBlock.learnerHasAccess
+
+    Card(
         modifier = Modifier
-            .wrapContentHeight()
             .fillMaxWidth()
+            .clickable(enabled = isClickable) { onItemClick(dateBlock) },
+        shape = RoundedCornerShape(14.dp),
+        elevation = 2.dp,
+        backgroundColor = Color.White,
     ) {
-        if (isMiddleChild) {
-            Spacer(modifier = Modifier.height(20.dp))
-        }
-        if (canShowDate) {
-            val timeTitle = formatToString(context, dateBlock.date, useRelativeDates)
-            Text(
-                text = timeTitle,
-                style = MaterialTheme.appTypography.labelMedium,
-                color = MaterialTheme.appColors.textDark,
-                maxLines = 1,
-            )
-        }
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(end = 4.dp)
-                .clickable(
-                    enabled = dateBlock.blockId.isNotEmpty() && dateBlock.learnerHasAccess,
-                    onClick = { onItemClick(dateBlock) }
-                )
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            dateBlock.dateType.drawableResId?.let { icon ->
-                Icon(
-                    modifier = Modifier
-                        .padding(end = 4.dp)
-                        .align(Alignment.CenterVertically),
-                    painter = painterResource(
-                        id = if (dateBlock.learnerHasAccess.not()) {
-                            CoreR.drawable.core_ic_lock
-                        } else {
-                            icon
-                        }
+            // Left date chip
+            Column(
+                modifier = Modifier
+                    .width(52.dp)
+                    .background(
+                        chipColor,
+                        RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp)
+                    )
+                    .padding(vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = dayNum,
+                    style = TextStyle(
+                        fontFamily = ttRoundsFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        lineHeight = 22.sp,
                     ),
-                    contentDescription = null,
-                    tint = MaterialTheme.appColors.textDark
+                    color = Color.White,
+                )
+                Text(
+                    text = monthAbbr,
+                    style = TextStyle(
+                        fontFamily = ttRoundsFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 9.sp,
+                        letterSpacing = 0.8.sp,
+                    ),
+                    color = Color.White.copy(alpha = 0.75f),
                 )
             }
-            Text(
+
+            // Body
+            Column(
                 modifier = Modifier
                     .weight(1f)
-                    .align(Alignment.CenterVertically),
-                // append assignment type if available with title
-                text = if (dateBlock.assignmentType.isNullOrEmpty().not()) {
-                    "${dateBlock.assignmentType}: ${dateBlock.title}"
-                } else {
-                    dateBlock.title
-                },
-                style = MaterialTheme.appTypography.titleMedium,
-                color = MaterialTheme.appColors.textDark,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(modifier = Modifier.width(7.dp))
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+            ) {
+                // Icon + title row
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                ) {
+                    val lockOrIcon = if (!dateBlock.learnerHasAccess) {
+                        CoreR.drawable.core_ic_lock
+                    } else {
+                        dateBlock.dateType.drawableResId
+                    }
+                    lockOrIcon?.let { iconRes ->
+                        Icon(
+                            painter = painterResource(id = iconRes),
+                            contentDescription = null,
+                            tint = chipColor,
+                            modifier = Modifier.size(15.dp),
+                        )
+                    }
+                    Text(
+                        text = if (!dateBlock.assignmentType.isNullOrEmpty()) {
+                            "${dateBlock.assignmentType}: ${dateBlock.title}"
+                        } else {
+                            dateBlock.title
+                        },
+                        style = TextStyle(
+                            fontFamily = ttRoundsFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.5.sp,
+                        ),
+                        color = Color(0xFF19212F),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (dateBlock.description.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text(
+                        text = dateBlock.description,
+                        style = TextStyle(
+                            fontFamily = ttRoundsFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 11.sp,
+                        ),
+                        color = Color(0xFF888888),
+                    )
+                }
+            }
 
-            if (dateBlock.blockId.isNotEmpty() && dateBlock.learnerHasAccess) {
+            // Arrow if clickable
+            if (isClickable) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    tint = MaterialTheme.appColors.textDark,
-                    contentDescription = "Open Block Arrow",
+                    contentDescription = null,
+                    tint = Color(0xFFCCCCCC),
                     modifier = Modifier
-                        .size(24.dp)
-                        .align(Alignment.CenterVertically)
+                        .padding(end = 10.dp)
+                        .size(20.dp),
                 )
             }
-        }
-        if (dateBlock.description.isNotEmpty()) {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp),
-                text = dateBlock.description,
-                style = MaterialTheme.appTypography.labelMedium,
-            )
         }
     }
 }
@@ -703,17 +827,6 @@ private val mockedResponse: LinkedHashMap<DatesSection, List<CourseDateBlock>> =
         ),
 
         Pair(
-            DatesSection.COMPLETED,
-            listOf(
-                CourseDateBlock(
-                    title = "Homework 1: ABCD",
-                    description = "After this date, course content will be archived",
-                    date = TimeUtils.iso8601ToDate("2023-10-20T15:08:07Z")!!,
-                )
-            )
-        ),
-
-        Pair(
             DatesSection.PAST_DUE,
             listOf(
                 CourseDateBlock(
@@ -745,14 +858,12 @@ private val mockedResponse: LinkedHashMap<DatesSection, List<CourseDateBlock>> =
                     date = TimeUtils.iso8601ToDate("2023-10-22T15:08:07Z")!!,
                     dateType = DateType.ASSIGNMENT_DUE_DATE,
                 ),
-
                 CourseDateBlock(
                     title = "Assignment Due",
                     description = "After this date, course content will be archived",
                     date = TimeUtils.iso8601ToDate("2023-10-23T15:08:07Z")!!,
                     dateType = DateType.ASSIGNMENT_DUE_DATE,
                 ),
-
                 CourseDateBlock(
                     title = "Surprise Assignment",
                     description = "After this date, course content will be archived",

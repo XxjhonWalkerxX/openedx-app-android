@@ -19,6 +19,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +68,7 @@ fun CourseContentAllScreen(
     viewModel: CourseContentAllViewModel,
     fragmentManager: FragmentManager,
     onNavigateToHome: () -> Unit = {},
+    onProgressLoaded: (completed: Int, total: Int) -> Unit = { _, _ -> },
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val uiMessage by viewModel.uiMessage.collectAsState(null)
@@ -84,6 +86,7 @@ fun CourseContentAllScreen(
         uiState = uiState,
         uiMessage = uiMessage,
         onNavigateToHome = onNavigateToHome,
+        onProgressLoaded = onProgressLoaded,
         onExpandClick = { block ->
             if (viewModel.switchCourseSections(block.id)) {
                 viewModel.sequentialClickedEvent(
@@ -154,6 +157,7 @@ private fun CourseContentAllUI(
     onDownloadClick: (blockIds: List<String>) -> Unit,
     onResetDatesClick: () -> Unit,
     onCertificateClick: (String) -> Unit,
+    onProgressLoaded: (completed: Int, total: Int) -> Unit = { _, _ -> },
 ) {
     val scaffoldState = rememberScaffoldState()
 
@@ -211,6 +215,17 @@ private fun CourseContentAllUI(
                                     onReturnToCourseClick = onNavigateToHome
                                 )
                             } else {
+                                // Calcular progreso y notificar al padre (fuera del LazyColumn)
+                                val sections =
+                                    uiState.courseStructure.blockData.getChapterBlocks()
+                                val progress = Progress(
+                                    total = sections.size,
+                                    completed = sections.filter { it.isCompleted() }.size
+                                )
+                                SideEffect {
+                                    onProgressLoaded(progress.completed, progress.total)
+                                }
+
                                 LazyColumn(
                                     modifier = Modifier.fillMaxSize(),
                                     contentPadding = listBottomPadding
@@ -259,30 +274,6 @@ private fun CourseContentAllUI(
                                         }
                                     }
 
-                                    val sections =
-                                        uiState.courseStructure.blockData.getChapterBlocks()
-                                    val progress = Progress(
-                                        total = sections.size,
-                                        completed = sections.filter { it.isCompleted() }.size
-                                    )
-                                    item {
-                                        CourseProgress(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(
-                                                    start = 24.dp,
-                                                    end = 24.dp
-                                                ),
-                                            progress = progress,
-                                            description = pluralStringResource(
-                                                R.plurals.course_sections_complete,
-                                                progress.completed,
-                                                progress.completed,
-                                                progress.total
-                                            )
-                                        )
-                                    }
-
                                     if (uiState.resumeComponent != null) {
                                         item {
                                             Box(listPadding) {
@@ -299,7 +290,7 @@ private fun CourseContentAllUI(
                                     item {
                                         Spacer(modifier = Modifier.height(12.dp))
                                     }
-                                    uiState.courseStructure.blockData.forEach { section ->
+                                    uiState.courseStructure.blockData.forEachIndexed { index, section ->
                                         val courseSubSections =
                                             uiState.courseSubSections[section.id]
                                         val courseSectionsState =
@@ -309,6 +300,7 @@ private fun CourseContentAllUI(
                                             CourseSection(
                                                 modifier = listPadding.padding(vertical = 4.dp),
                                                 section = section,
+                                                sectionIndex = index + 1,
                                                 onItemClick = onExpandClick,
                                                 useRelativeDates = uiState.useRelativeDates,
                                                 isSectionVisible = courseSectionsState,
