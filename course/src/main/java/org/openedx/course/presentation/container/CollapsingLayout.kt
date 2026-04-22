@@ -34,6 +34,9 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -88,6 +91,7 @@ internal fun CollapsingLayout(
     modifier: Modifier = Modifier,
     courseImage: Bitmap,
     imageHeight: Int,
+    startCollapsed: Boolean = false,
     isEnabled: Boolean,
     expandedTop: @Composable BoxScope.() -> Unit,
     collapsedTop: @Composable BoxScope.() -> Unit,
@@ -152,6 +156,20 @@ internal fun CollapsingLayout(
             offset.snapTo(newOffset)
         }
         return Offset(0f, newOffset - oldOffset)
+    }
+
+    // If requested, snap to collapsed state once measurements are available
+    LaunchedEffect(startCollapsed, expandedTopHeight.floatValue, backgroundImageHeight.floatValue, collapsedTopHeight.floatValue) {
+        if (startCollapsed) {
+            val collapsedOffset = -expandedTopHeight.floatValue - backgroundImageHeight.floatValue + collapsedTopHeight.floatValue
+            if (collapsedOffset != 0f) {
+                // Smoothly animate to the collapsed offset for a better UX
+                offset.animateTo(
+                    targetValue = collapsedOffset,
+                    animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)
+                )
+            }
+        }
     }
 
     val nestedScrollConnection = remember {

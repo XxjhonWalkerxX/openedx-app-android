@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -297,12 +298,27 @@ fun CourseDashboard(
 
     OpenEdXTheme {
         val windowSize = rememberWindowSize()
+        val configuration = LocalConfiguration.current
+        val responsiveImageHeight = remember(
+            windowSize,
+            configuration.orientation,
+            configuration.screenHeightDp
+        ) {
+            val portraitHeight = (configuration.screenHeightDp * 0.42f).toInt()
+            when {
+                windowSize.isTablet && configuration.orientation == Configuration.ORIENTATION_LANDSCAPE -> 260
+                windowSize.isTablet -> 380
+                configuration.orientation == Configuration.ORIENTATION_LANDSCAPE -> 180
+                else -> portraitHeight.coerceIn(220, 420)
+            }
+        }
         val scope = rememberCoroutineScope()
         val scaffoldState = rememberScaffoldState()
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
-                .navigationBarsPadding(),
+                .navigationBarsPadding()
+                .imePadding(),
             scaffoldState = scaffoldState,
             backgroundColor = MaterialTheme.appColors.background,
             bottomBar = {
@@ -362,7 +378,9 @@ fun CourseDashboard(
                             .padding(paddingValues)
                             .pullRefresh(pullRefreshState),
                         courseImage = courseImage,
-                        imageHeight = 450,
+                        imageHeight = responsiveImageHeight,
+                        startCollapsed = CourseContainerTab.entries[pagerState.currentPage] == CourseContainerTab.CONTENT &&
+                            selectedContentTab == CourseContentTab.ASSIGNMENTS,
                         expandedTop = {
                             ExpandedHeaderContent(
                                 courseTitle = viewModel.courseName,
