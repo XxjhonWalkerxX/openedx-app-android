@@ -9,6 +9,9 @@ import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
+import org.openedx.core.ui.theme.brand.LocalBrand
+import org.openedx.core.ui.theme.brand.aprendeBrandTokens
 
 private val DarkColorPalette = AppColors(
     material = darkColors(
@@ -202,11 +205,10 @@ val MaterialTheme.appColors: AppColors
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OpenEdXTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    val colors = if (darkTheme) {
-        DarkColorPalette
-    } else {
-        LightColorPalette
-    }
+    // Fork @prende.mx: light mode forzado — paleta cream/guinda no validada en dark
+    @Suppress("UNUSED_PARAMETER", "UNUSED_VARIABLE")
+    val colors = LightColorPalette
+    val brandTokens = remember { aprendeBrandTokens() }
 
     MaterialTheme(
         colors = colors.material,
@@ -215,6 +217,7 @@ fun OpenEdXTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composabl
     ) {
         CompositionLocalProvider(
             LocalOverscrollFactory provides null,
+            LocalBrand provides brandTokens,
             content = content
         )
     }
