@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import org.openedx.core.ui.theme.OpenEdXTheme
+import org.openedx.learn.presentation.brand.LearnBrandView
 
 class DashboardGalleryFragment : Fragment() {
     override fun onCreateView(
@@ -17,7 +18,7 @@ class DashboardGalleryFragment : Fragment() {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
             OpenEdXTheme {
-                DashboardGalleryView(fragmentManager = requireActivity().supportFragmentManager)
+                LearnBrandView(fragmentManager = requireActivity().supportFragmentManager)
             }
         }
     }
