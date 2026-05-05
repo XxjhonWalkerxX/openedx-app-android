@@ -88,6 +88,7 @@ import org.openedx.core.ui.theme.ttRoundsFamily
 import org.openedx.discovery.R
 import org.openedx.discovery.domain.model.Course
 import org.openedx.discovery.presentation.NativeDiscoveryFragment.Companion.LOAD_MORE_THRESHOLD
+import org.openedx.discovery.presentation.brand.DiscoveryBrandView
 import org.openedx.discovery.presentation.ui.DiscoveryCourseItem
 import org.openedx.foundation.presentation.UIMessage
 import org.openedx.foundation.presentation.WindowSize
@@ -125,7 +126,7 @@ class NativeDiscoveryFragment : Fragment() {
                 val refreshing by viewModel.isUpdating.observeAsState(false)
                 val querySearch = arguments?.getString(ARG_SEARCH_QUERY, "") ?: ""
 
-                DiscoveryScreen(
+                DiscoveryBrandView(
                     windowSize = windowSize,
                     state = uiState!!,
                     uiMessage = uiMessage,
