@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,8 +17,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,9 +30,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ManageAccounts
-import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -63,8 +58,9 @@ import org.openedx.core.domain.model.CourseEnrollments
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OfflineModeDialog
+import org.openedx.core.ui.brand.components.BrandProgressRing
 import org.openedx.core.ui.brand.components.BrandSectionHeader
-import org.openedx.core.ui.brand.components.BrandStatTile
+import org.openedx.core.ui.brand.components.BrandStatBox
 import org.openedx.core.ui.brand.components.DecorativeRings
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.brand.BrandShapes
@@ -224,7 +220,7 @@ private fun LearnBrandContent(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(100.dp))
+                        Spacer(modifier = Modifier.height(140.dp))
                     }
                 }
             }
@@ -259,22 +255,19 @@ private fun LearnBrandHero(
     onSettingsClick: () -> Unit,
 ) {
     val brand = MaterialTheme.brand
-    val (totalCount, inProgressCount, notStartedCount) = remember(userCourses) {
+    val (totalCount, notStartedCount) = remember(userCourses) {
         val all = buildList {
             userCourses?.primary?.let { add(it) }
             userCourses?.enrollments?.courses?.let { addAll(it) }
         }
-        Triple(
-            all.size,
-            all.count { it.progress.value in 0.01f..0.99f },
-            all.count { it.progress.value == 0f },
-        )
+        all.size to all.count { it.progress.value == 0f }
     }
+    val displayName = userName.takeIf { it.isNotEmpty() }?.uppercase()
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 280.dp)
+            .heightIn(min = 320.dp)
             .background(brand.gradients.heroDashboard),
     ) {
         // Stripe guinda superior
@@ -293,8 +286,8 @@ private fun LearnBrandHero(
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .padding(horizontal = BrandSpacing.screenHorizontal)
-                .padding(top = 8.dp, bottom = BrandSpacing.xxl),
-            verticalArrangement = Arrangement.spacedBy(BrandSpacing.l),
+                .padding(top = BrandSpacing.l, bottom = BrandSpacing.xxxl),
+            verticalArrangement = Arrangement.spacedBy(BrandSpacing.xl),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -318,14 +311,9 @@ private fun LearnBrandHero(
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "Bienvenido de vuelta",
-                    style = brand.typography.eyebrow,
-                    color = brand.palette.textOnHeader.copy(alpha = 0.65f),
-                )
-                Text(
-                    text = if (userName.isNotEmpty()) "¡Hola, $userName!" else "¡Hola!",
+                    text = if (displayName != null) "¡Hola, $displayName!" else "¡Hola!",
                     style = brand.typography.displayHero,
                     color = brand.palette.textOnHeader,
                 )
@@ -337,27 +325,14 @@ private fun LearnBrandHero(
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(BrandSpacing.s)) {
-                if (totalCount > 0) {
-                    BrandStatTile(
-                        value = totalCount.toString(),
-                        label = "Total",
-                        icon = Icons.Filled.School,
-                    )
-                }
-                if (inProgressCount > 0) {
-                    BrandStatTile(
-                        value = inProgressCount.toString(),
-                        label = "En curso",
-                        icon = Icons.Filled.PlayCircle,
-                    )
-                }
-                if (notStartedCount > 0) {
-                    BrandStatTile(
-                        value = notStartedCount.toString(),
-                        label = "Por iniciar",
-                        icon = Icons.Filled.TaskAlt,
-                    )
-                }
+                BrandStatBox(
+                    value = totalCount.toString(),
+                    label = "Cursos",
+                )
+                BrandStatBox(
+                    value = notStartedCount.toString(),
+                    label = "Por iniciar",
+                )
             }
         }
     }
@@ -405,21 +380,88 @@ private fun LearnBrandCourses(
             Spacer(modifier = Modifier.height(BrandSpacing.xxl))
             BrandSectionHeader(
                 title = "Mis cursos",
-                actionLabel = "Ver todo ($totalCount)",
+                actionLabel = "Ver todos ($totalCount)",
                 onActionClick = { onAction(DashboardGalleryScreenAction.ViewAll) },
             )
             Spacer(modifier = Modifier.height(BrandSpacing.m))
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = BrandSpacing.screenHorizontal),
-                horizontalArrangement = Arrangement.spacedBy(BrandSpacing.m),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = BrandSpacing.screenHorizontal),
+                verticalArrangement = Arrangement.spacedBy(BrandSpacing.m),
             ) {
-                itemsIndexed(secondary) { _, course ->
-                    CourseListItemBrand(
-                        course = course,
-                        apiHostUrl = apiHostUrl,
-                        onClick = { openCourse(course) },
-                    )
+                secondary.chunked(2).forEach { row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(BrandSpacing.m),
+                    ) {
+                        row.forEach { course ->
+                            CourseListItemBrand(
+                                modifier = Modifier.weight(1f),
+                                course = course,
+                                apiHostUrl = apiHostUrl,
+                                onClick = { openCourse(course) },
+                            )
+                        }
+                        if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(BrandSpacing.xxl))
+        WeeklyMetaCard(
+            modifier = Modifier.padding(horizontal = BrandSpacing.screenHorizontal),
+            activeCount = userCourses.enrollments.courses.count { it.progress.value in 0.01f..0.99f },
+            totalCount = userCourses.enrollments.courses.size + (if (userCourses.primary != null) 1 else 0),
+        )
+    }
+}
+
+@Composable
+private fun WeeklyMetaCard(
+    activeCount: Int,
+    totalCount: Int,
+    modifier: Modifier = Modifier,
+) {
+    val brand = MaterialTheme.brand
+    val progress = if (totalCount > 0) activeCount.toFloat() / totalCount else 0f
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(BrandShapes.Hero)
+            .background(brand.gradients.heroDashboard)
+            .padding(BrandSpacing.l),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(BrandSpacing.l),
+        ) {
+            BrandProgressRing(
+                progress = progress,
+                size = 64.dp,
+                strokeWidth = 5.dp,
+                trackColor = Color.White.copy(alpha = 0.18f),
+                progressColor = Color.White,
+                showLabel = false,
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = "META SEMANAL",
+                    style = brand.typography.eyebrow,
+                    color = brand.palette.textOnHeader.copy(alpha = 0.65f),
+                )
+                Text(
+                    text = "Sigue aprendiendo",
+                    style = brand.typography.titleSection,
+                    color = brand.palette.textOnHeader,
+                )
+                Text(
+                    text = "$activeCount de $totalCount cursos activos",
+                    style = brand.typography.body,
+                    color = brand.palette.textOnHeader.copy(alpha = 0.72f),
+                )
             }
         }
     }
