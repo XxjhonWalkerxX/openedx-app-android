@@ -72,6 +72,7 @@ internal fun ManageAccountView(
         onRefresh = { onAction(ManageAccountViewAction.SwipeRefresh) }
     )
 
+    @Suppress("UnusedMaterialScaffoldPaddingParameter")
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -79,7 +80,7 @@ internal fun ManageAccountView(
                 testTagsAsResourceId = true
             },
         scaffoldState = scaffoldState
-    ) { paddingValues ->
+    ) { _ ->
 
         val contentWidth by remember(key1 = windowSize) {
             mutableStateOf(

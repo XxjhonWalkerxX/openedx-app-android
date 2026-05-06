@@ -160,7 +160,7 @@ open class VideoUnitViewModel(
         viewModelScope.launch {
             try {
                 val videoProgress = courseRepository.getVideoProgress(blockId)
-                _currentVideoTime.value = videoProgress.videoTime
+                _currentVideoTime.value = videoProgress.videoTime ?: 0L
             } catch (e: Exception) {
                 e.printStackTrace()
             }

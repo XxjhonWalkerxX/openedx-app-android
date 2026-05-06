@@ -19,12 +19,17 @@ class LlaveMxAuthManager(private val context: Context) {
 
     private val logger = Logger("LlaveMxAuthManager")
     // Configuración OAuth2 de LlaveMX
-    companion object {      
-        private const val CLIENT_ID = "202602091646467055"
-        private const val AUTHORIZATION_ENDPOINT = "https://val-llave.infotec.mx/oauth.xhtml"
-        
+    companion object {
+        /*
+            DESARROLLO:
+            private const val CLIENT_ID = "202602091646467055"
+            private const val AUTHORIZATION_ENDPOINT = "https://val-llave.infotec.mx/oauth.xhtml"
+            const val REDIRECT_URI = "https://dev.mexicox.gob.mx/mobile/callback"
+         */
+        private const val CLIENT_ID = "202604061741155403"
+        private const val AUTHORIZATION_ENDPOINT = "https://www.llave.gob.mx/oauth.xhtml"
         // Redirect URI registrado en LlaveMX — HTTPS bridge que hace el deep link a la app
-        const val REDIRECT_URI = "https://dev.mexicox.gob.mx/mobile/callback"
+        const val REDIRECT_URI = "https://cursos.aprende.gob.mx/mobile/callback"
 
         // Almacenamiento seguro
         private const val PREFS_NAME = "llavemx_oauth_prefs"    

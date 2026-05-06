@@ -24,3 +24,8 @@ i18n/
 .claude/
 CLAUDE.md
 docs/screenshots/
+
+# Secrets
+.env
+.env.*
+!.env.example

@@ -3,6 +3,8 @@ package org.openedx.course.presentation.home
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -21,6 +23,7 @@ import org.openedx.core.domain.helper.VideoPreviewHelper
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.CourseComponentStatus
 import org.openedx.core.domain.model.CourseDatesBannerInfo
+import org.openedx.core.domain.model.CourseDatesResult
 import org.openedx.core.domain.model.CourseProgress
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.extension.getChapterBlocks
@@ -176,8 +179,26 @@ class CourseHomeViewModel(
             val courseStructureFlow = interactor.getCourseStructureFlow(courseId, false)
                 .catch { emit(null) }
             val courseStatusFlow = interactor.getCourseStatusFlow(courseId)
+                .catch { emit(CourseComponentStatus("")) }
             val courseDatesFlow = interactor.getCourseDatesFlow(courseId)
-            val courseProgressFlow = interactor.getCourseProgress(courseId, false, true)
+                .catch {
+                    emit(
+                        CourseDatesResult(
+                            datesSection = linkedMapOf(),
+                            courseBanner = CourseDatesBannerInfo(
+                                missedDeadlines = false,
+                                missedGatedContent = false,
+                                verifiedUpgradeLink = "",
+                                contentTypeGatingEnabled = false,
+                                hasEnded = false
+                            )
+                        )
+                    )
+                }
+            val courseProgressFlow: Flow<CourseProgress?> =
+                interactor.getCourseProgress(courseId, false, true)
+                    .map<CourseProgress, CourseProgress?> { it }
+                    .catch { emit(null) }
             combine(
                 courseStructureFlow,
                 courseStatusFlow,
@@ -206,7 +227,7 @@ class CourseHomeViewModel(
         courseStructure: CourseStructure,
         courseStatus: CourseComponentStatus,
         datesBannerInfo: CourseDatesBannerInfo,
-        courseProgress: CourseProgress
+        courseProgress: CourseProgress?
     ) {
         setBlocks(blocks)
         courseSubSections.clear()
@@ -497,15 +518,8 @@ class CourseHomeViewModel(
 
     fun getCourseProgress() {
         viewModelScope.launch {
-            if (_uiState.value !is CourseHomeUIState.CourseData) {
-                _uiState.value = CourseHomeUIState.Loading
-            }
             interactor.getCourseProgress(courseId, false, true)
-                .catch { e ->
-                    if (_uiState.value !is CourseHomeUIState.CourseData) {
-                        _uiState.value = CourseHomeUIState.Error
-                    }
-                }
+                .catch { /* getCourseDataInternal handles state — no sobreescribir con Error */ }
                 .collectLatest { progress ->
                     val currentState = _uiState.value
                     if (currentState is CourseHomeUIState.CourseData) {
