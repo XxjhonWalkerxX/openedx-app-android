@@ -1,5 +1,8 @@
 package org.openedx.app
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
@@ -59,7 +62,7 @@ import org.openedx.profile.presentation.video.VideoSettingsFragment
 import org.openedx.whatsnew.WhatsNewRouter
 import org.openedx.whatsnew.presentation.whatsnew.WhatsNewFragment
 
-class AppRouter :
+class AppRouter(private val context: Context) :
     AuthRouter,
     DiscoveryRouter,
     DashboardRouter,
@@ -70,6 +73,10 @@ class AppRouter :
     WhatsNewRouter,
     CalendarRouter,
     DownloadsRouter {
+
+    private companion object {
+        const val LLAVE_MX_REGISTER_URL = "https://www.llave.gob.mx/RegistroCiudadano.xhtml"
+    }
 
     // region AuthRouter
     override fun navigateToMain(
@@ -93,7 +100,19 @@ class AppRouter :
     }
 
     override fun navigateToSignUp(fm: FragmentManager, courseId: String?, infoType: String?) {
-        replaceFragmentWithBackStack(fm, SignUpFragment.newInstance(courseId, infoType))
+        // Registration in-app está deshabilitado: el alta de cuenta se realiza
+        // exclusivamente a través de LlaveMX (vulnerabilidad #4 del dictamen
+        // TICDEFENSE 04-may-2026 — exposición de activation_key en el endpoint
+        // /api/user/v1/accounts/). El botón "Crear cuenta" se conserva en la UI
+        // pero redirige al portal oficial de registro ciudadano de LlaveMX.
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(LLAVE_MX_REGISTER_URL)).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun navigateToLogistration(fm: FragmentManager, courseId: String?) {

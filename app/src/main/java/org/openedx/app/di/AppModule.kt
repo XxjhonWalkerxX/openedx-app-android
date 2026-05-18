@@ -119,7 +119,7 @@ val appModule = module {
     single { DiscoveryNotifier() }
     single { CalendarNotifier() }
 
-    single { AppRouter() }
+    single { AppRouter(androidApplication()) }
     single<AuthRouter> { get<AppRouter>() }
     single<DiscoveryRouter> { get<AppRouter>() }
     single<DashboardRouter> { get<AppRouter>() }
