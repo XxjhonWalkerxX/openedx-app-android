@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import okhttp3.Interceptor
 import okhttp3.Response
-import okio.IOException
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.openedx.core.data.model.ErrorResponse
 import org.openedx.core.system.EdxError
 
@@ -29,10 +29,25 @@ class HandleErrorInterceptor(
     private fun handleErrorResponse(response: Response, jsonStr: String): Response {
         return try {
             val errorResponse = gson.fromJson(jsonStr, ErrorResponse::class.java)
-            handleParsedErrorResponse(errorResponse) ?: response
+            handleParsedErrorResponse(errorResponse) ?: rebuildResponse(response, jsonStr)
         } catch (e: JsonSyntaxException) {
-            throw IOException("JsonSyntaxException $jsonStr", e)
+            // El cuerpo de error no es JSON (p.ej. una pagina HTML de error del
+            // servidor). No es un fallo de la app: devolvemos la respuesta HTTP
+            // original para que las capas superiores manejen el codigo de estado,
+            // en lugar de propagar una excepcion y cerrar la aplicacion.
+            rebuildResponse(response, jsonStr)
         }
+    }
+
+    /**
+     * El cuerpo de una [Response] solo puede leerse una vez y aqui ya se
+     * consumio con `body.string()`. Reconstruimos la respuesta con el mismo
+     * contenido para que las capas superiores puedan volver a leerlo.
+     */
+    private fun rebuildResponse(response: Response, body: String): Response {
+        return response.newBuilder()
+            .body(body.toResponseBody(response.body?.contentType()))
+            .build()
     }
 
     private fun handleParsedErrorResponse(errorResponse: ErrorResponse?): Response? {
