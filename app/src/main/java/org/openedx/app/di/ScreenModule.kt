@@ -102,7 +102,7 @@ val screenModule = module {
     factory { AuthRepository(get(), get(), get()) }
     factory { AuthInteractor(get()) }
     factory { Validator() }
-    factory { LlaveMxAuthManager(get()) }
+    factory { LlaveMxAuthManager(get(), get()) }
 
     viewModel { (courseId: String) ->
         LogistrationViewModel(

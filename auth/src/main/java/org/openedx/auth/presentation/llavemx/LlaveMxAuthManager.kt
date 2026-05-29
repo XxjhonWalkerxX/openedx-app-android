@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Base64
 import androidx.core.content.edit
+import org.openedx.core.config.Config
 import org.openedx.core.utils.Logger
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -14,20 +15,35 @@ import java.security.SecureRandom
  *
  * Implementa el flujo Authorization Code con PKCE (Proof Key for Code Exchange)
  * según RFC 7636 para autenticación segura sin client_secret.
+ *
+ * La configuración (client_id, endpoint, redirect) es dependiente del flavor:
+ * se lee de [Config], que se llena desde `config.yaml` por entorno. Así dev usa
+ * el sandbox de LlaveMX y prod usa producción, sin hardcodear valores.
  */
-class LlaveMxAuthManager(private val context: Context) {
+class LlaveMxAuthManager(
+    private val context: Context,
+    private val config: Config,
+) {
 
     private val logger = Logger("LlaveMxAuthManager")
-    // Configuración OAuth2 de LlaveMX
-    companion object {      
-        private const val CLIENT_ID = "202602091646467055"
-        private const val AUTHORIZATION_ENDPOINT = "https://val-llave.infotec.mx/oauth.xhtml"
-        
-        // Redirect URI registrado en LlaveMX — HTTPS bridge que hace el deep link a la app
-        const val REDIRECT_URI = "https://dev.mexicox.gob.mx/mobile/callback"
+
+    // Configuración OAuth2 de LlaveMX (por flavor, desde Config)
+    private val clientId: String = config.getLlaveMxConfig().clientId
+    private val authorizationEndpoint: String = config.getLlaveMxConfig().authorizationEndpoint
+
+    /**
+     * Redirect URI registrado en LlaveMX — HTTPS bridge que hace el deep link a
+     * la app. Se deriva del backend del flavor activo (API_HOST_URL) para que
+     * siempre coincida (dev -> dev.mexicox.gob.mx, prod -> cursos.aprende.gob.mx).
+     */
+    val redirectUri: String = config.getApiHostURL().trimEnd('/') + REDIRECT_PATH
+
+    companion object {
+        // Path del bridge HTTPS en el backend de Open edX
+        private const val REDIRECT_PATH = "/mobile/callback"
 
         // Almacenamiento seguro
-        private const val PREFS_NAME = "llavemx_oauth_prefs"    
+        private const val PREFS_NAME = "llavemx_oauth_prefs"
         private const val KEY_CODE_VERIFIER = "code_verifier"
         private const val KEY_STATE = "state"
 
@@ -162,10 +178,10 @@ class LlaveMxAuthManager(private val context: Context) {
         // Construir URL con parámetros
         // IMPORTANTE: LlaveMX Mobile usa "redirect_url" NO "redirect_uri"
         // NO se envía "scope" en sandbox
-        val uri = Uri.parse(AUTHORIZATION_ENDPOINT).buildUpon()
+        val uri = Uri.parse(authorizationEndpoint).buildUpon()
             .appendQueryParameter("response_type", "code")
-            .appendQueryParameter("client_id", CLIENT_ID)
-            .appendQueryParameter("redirect_url", REDIRECT_URI) 
+            .appendQueryParameter("client_id", clientId)
+            .appendQueryParameter("redirect_url", redirectUri)
             .appendQueryParameter("code_challenge", codeChallenge)
             .appendQueryParameter("code_challenge_method", "S256")
             .appendQueryParameter("state", state)

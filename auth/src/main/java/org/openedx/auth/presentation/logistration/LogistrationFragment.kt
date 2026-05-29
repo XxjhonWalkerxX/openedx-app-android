@@ -7,8 +7,10 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import org.koin.android.ext.android.get
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
+import org.openedx.auth.presentation.llavemx.LlaveMxAuthManager
 import org.openedx.auth.presentation.llavemx.LlaveMxCallbackActivity
 import org.openedx.auth.presentation.ui.OnboardingScreen
 import org.openedx.core.ApiConstants
@@ -58,8 +60,7 @@ class LogistrationFragment : Fragment() {
                         }
                     },
                     onLlaveMxSignIn = {
-                        org.openedx.auth.presentation.llavemx.LlaveMxAuthManager(requireContext())
-                            .startAuthorizationFlow(requireContext())
+                        get<LlaveMxAuthManager>().startAuthorizationFlow(requireContext())
                     },
                     onSearchClick = {
                         viewModel.navigateToDiscovery(parentFragmentManager, "")

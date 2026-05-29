@@ -47,6 +47,12 @@ GOOGLE:
   ENABLED: false
   CLIENT_ID: ''
 
+# OAuth LlaveMX — producción (www.llave.gob.mx).
+# redirect_uri se deriva de API_HOST_URL en LlaveMxAuthManager.
+LLAVEMX:
+  CLIENT_ID: '202604061741155403'
+  AUTHORIZATION_ENDPOINT: 'https://www.llave.gob.mx/oauth.xhtml'
+
 MICROSOFT:
   ENABLED: false
   CLIENT_ID: ''

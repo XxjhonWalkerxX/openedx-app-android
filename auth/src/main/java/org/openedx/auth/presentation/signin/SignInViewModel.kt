@@ -145,7 +145,7 @@ class SignInViewModel(
                 interactor.loginLlaveMx(
                     code = code,
                     codeVerifier = codeVerifier,
-                    redirectUri = LlaveMxAuthManager.REDIRECT_URI
+                    redirectUri = llaveMxAuthManager.redirectUri
                 )
             }.onFailure { error ->
                 logger.e { "Error en login LlaveMX PKCE: $error" }

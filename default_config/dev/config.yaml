@@ -46,6 +46,12 @@ GOOGLE:
   ENABLED: true
   CLIENT_ID: '12345678909876523'
 
+# OAuth LlaveMX — entorno sandbox (val-llave) para dev/stage.
+# redirect_uri se deriva de API_HOST_URL en LlaveMxAuthManager.
+LLAVEMX:
+  CLIENT_ID: '202602091646467055'
+  AUTHORIZATION_ENDPOINT: 'https://val-llave.infotec.mx/oauth.xhtml'
+
 MICROSOFT:
   ENABLED: false
   CLIENT_ID: ''

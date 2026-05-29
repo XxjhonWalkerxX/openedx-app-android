@@ -74,6 +74,10 @@ class Config(context: Context) {
         return getObjectOrNewInstance(GOOGLE, GoogleConfig::class.java)
     }
 
+    fun getLlaveMxConfig(): LlaveMxConfig {
+        return getObjectOrNewInstance(LLAVEMX, LlaveMxConfig::class.java)
+    }
+
     fun getMicrosoftConfig(): MicrosoftConfig {
         return getObjectOrNewInstance(MICROSOFT, MicrosoftConfig::class.java)
     }
@@ -179,6 +183,7 @@ class Config(context: Context) {
         private const val BRAZE = "BRAZE"
         private const val FACEBOOK = "FACEBOOK"
         private const val GOOGLE = "GOOGLE"
+        private const val LLAVEMX = "LLAVEMX"
         private const val MICROSOFT = "MICROSOFT"
         private const val PRE_LOGIN_EXPERIENCE_ENABLED = "PRE_LOGIN_EXPERIENCE_ENABLED"
         private const val REGISTRATION_ENABLED = "REGISTRATION_ENABLED"
