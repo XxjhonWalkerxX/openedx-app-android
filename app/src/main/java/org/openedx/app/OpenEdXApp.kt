@@ -90,14 +90,21 @@ class OpenEdXApp : Application() {
         // porque puede ser manipulado en runtime por un atacante.
         val expectedPackage = if (strictMode) PROD_PACKAGE_NAME else DEV_PACKAGE_NAME
 
-        // expectedSigningCertificateHashesBase64: se deja vacio mientras no
-        // tengamos el hash SHA-256 del keystore de release. Hasta entonces
-        // freeRASP no validara tamper/repackaging, pero si detecta el resto
-        // de amenazas (Frida, root, debugger, emulator, hooking, etc).
+        // Hash SHA-256 (base64) del certificado de firma del keystore de release.
+        // Solo se pasa en prod RELEASE: ahi activa la deteccion de tamper/repackaging
+        // (un APK re-firmado tendra otro hash -> onTamperDetected -> bloqueo).
+        // En develop/stage y en cualquier build debug se deja vacio para que
+        // RaspManager compute el hash del APK actual y NO dispare un falso tamper.
+        val signingHashes = if (strictMode && !BuildConfig.DEBUG) {
+            arrayOf(PROD_SIGNING_CERT_HASH)
+        } else {
+            emptyArray()
+        }
+
         RaspManager.init(
             context = this,
             packageName = expectedPackage,
-            signingCertHashesBase64 = emptyArray(),
+            signingCertHashesBase64 = signingHashes,
             strictMode = strictMode,
         )
     }
@@ -109,5 +116,9 @@ class OpenEdXApp : Application() {
         // OAuth (mx.aprende.android), que es otra cosa.
         private const val DEV_PACKAGE_NAME = "org.openedx.app"
         private const val PROD_PACKAGE_NAME = "mx.gob.aprende.cursos"
+
+        // SHA-256 (base64) del cert del keystore de release (aprende-cursos-release.jks).
+        // Verificado contra apksigner y contra el hash computado en runtime.
+        private const val PROD_SIGNING_CERT_HASH = "Wbty7wcgDJN8j7BIb2y0cSB0GZzx9Arx1zkfXCAW2iQ="
     }
 }

@@ -29,19 +29,29 @@ object SecurityState {
             get() = threats.isNotEmpty()
     }
 
-    enum class Threat {
-        ROOT,
-        DEBUGGER,
-        EMULATOR,
-        HOOK,
-        TAMPERED,
-        UNTRUSTED_INSTALL_SOURCE,
-        DEVICE_BINDING,
-        OBFUSCATION,
-        MALWARE,
-        AUTOMATION,
-        DEVELOPER_MODE,
-        ADB_ENABLED,
+    /**
+     * Cada amenaza declara si debe BLOQUEAR operaciones sensibles o si es
+     * solo telemetría. La distinción es clave para la distribución por APK
+     * directo: amenazas como [UNTRUSTED_INSTALL_SOURCE] se disparan en CUALQUIER
+     * instalación fuera de Play Store (o sea, todos los usuarios legítimos),
+     * así que NO deben bloquear; solo las que indican un bypass real lo hacen.
+     */
+    enum class Threat(val blocksSensitiveOperations: Boolean) {
+        // Indican un intento real de bypass / entorno comprometido -> bloquean
+        ROOT(true),
+        DEBUGGER(true),
+        EMULATOR(true),
+        HOOK(true),
+        TAMPERED(true),
+        MALWARE(true),
+        AUTOMATION(true),
+
+        // Ruido esperado en distribución por APK directo / power users -> solo telemetría
+        UNTRUSTED_INSTALL_SOURCE(false),
+        DEVICE_BINDING(false),
+        OBFUSCATION(false),
+        DEVELOPER_MODE(false),
+        ADB_ENABLED(false),
     }
 
     private val _state = MutableStateFlow(CompromiseReport())
@@ -56,11 +66,13 @@ object SecurityState {
         internal set
 
     /**
-     * True si hay alguna amenaza detectada Y el modo estricto esta activo.
+     * True si hay alguna amenaza BLOQUEANTE detectada Y el modo estricto esta
+     * activo. Las amenazas de solo-telemetria (install source, developer mode,
+     * adb, etc.) NO cuentan aqui para no bloquear usuarios legitimos.
      * Los call sites deben consultar esto antes de operaciones sensibles.
      */
     val shouldBlockSensitiveOperations: Boolean
-        get() = strictMode && _state.value.isCompromised
+        get() = strictMode && _state.value.threats.any { it.blocksSensitiveOperations }
 
     /**
      * Registra una amenaza detectada por freeRASP. Idempotente.
