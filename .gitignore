@@ -16,6 +16,10 @@ local.properties
 /.idea/
 *.log
 /config_settings.yaml
+# Firma de release — credenciales y keystores fuera de git
+keystore.properties
+*.jks
+*.keystore
 .venv/
 i18n/
 **/values-*/strings.xml

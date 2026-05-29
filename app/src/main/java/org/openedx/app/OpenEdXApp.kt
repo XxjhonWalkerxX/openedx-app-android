@@ -104,8 +104,10 @@ class OpenEdXApp : Application() {
 
     companion object {
         private const val FLAVOR_PROD = "prod"
-        // Package names del YAML config: develop=org.openedx.app, prod=mx.aprende.android
+        // applicationId del YAML config (PROD_APPLICATION_ID): develop=org.openedx.app,
+        // prod=mx.gob.aprende.cursos. OJO: NO confundir con el scheme del deep-link de
+        // OAuth (mx.aprende.android), que es otra cosa.
         private const val DEV_PACKAGE_NAME = "org.openedx.app"
-        private const val PROD_PACKAGE_NAME = "mx.aprende.android"
+        private const val PROD_PACKAGE_NAME = "mx.gob.aprende.cursos"
     }
 }
