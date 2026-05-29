@@ -29,6 +29,8 @@ buildscript {
 
         // Third-party library versions
         branch_sdk_version = '5.20.0'
+        // freeRASP (Talsec Community) - Capa 3 defensa SSL pinning (vuln #2 TICDEFENSE)
+        freerasp_version = '18.3.0'
         play_services_ads_identifier_version = '18.2.0'
         install_referrer_version = '2.2'
         snakeyaml_version = '2.4'

@@ -29,6 +29,9 @@ dependencyResolutionManagement {
         maven {
             url = uri("https://jitpack.io")
         }
+        // freeRASP (Talsec) - repos publicos para capa 3 defensa SSL pinning
+        maven { url "https://europe-west3-maven.pkg.dev/talsec-artifact-repository/freerasp" }
+        maven { url "https://europe-west3-maven.pkg.dev/talsec-artifact-repository/common" }
     }
 }
 //Workaround for AS Iguana https://github.com/gradle/gradle/issues/28407

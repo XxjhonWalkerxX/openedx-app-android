@@ -5,6 +5,7 @@ import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Response
 import okhttp3.ResponseBody
+import org.openedx.core.security.CertificatePinnerProvider
 import retrofit2.http.GET
 import retrofit2.http.Streaming
 import retrofit2.http.Url
@@ -14,6 +15,7 @@ class FileDownloader : AbstractDownloader(), ProgressListener {
     private var firstUpdate = true
 
     override val client: OkHttpClient = OkHttpClient.Builder()
+        .certificatePinner(CertificatePinnerProvider.build())
         .addNetworkInterceptor(
             Interceptor { chain: Interceptor.Chain ->
                 val originalResponse: Response = chain.proceed(chain.request())

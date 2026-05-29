@@ -14,6 +14,7 @@ import org.openedx.app.di.appModule
 import org.openedx.app.di.networkingModule
 import org.openedx.app.di.screenModule
 import org.openedx.core.config.Config
+import org.openedx.core.security.RaspManager
 import org.openedx.firebase.OEXFirebaseAnalytics
 
 class OpenEdXApp : Application() {
@@ -31,6 +32,9 @@ class OpenEdXApp : Application() {
                 screenModule
             )
         }
+
+        initRasp()
+
         if (config.getFirebaseConfig().enabled) {
             FirebaseApp.initializeApp(this)
         }
@@ -68,5 +72,40 @@ class OpenEdXApp : Application() {
         if (config.getFirebaseConfig().enabled) {
             pluginManager.addPlugin(OEXFirebaseAnalytics(context = this))
         }
+    }
+
+    /**
+     * Capa 3 de defensa contra el hallazgo TICDEFENSE #2 (Bypass SSL Pinning).
+     *
+     * En el flavor `prod` activa modo estricto: si freeRASP detecta Frida,
+     * root, hook, etc., se bloquea el login en SignInViewModel.
+     *
+     * En develop/stage solo se registra en logs para no entorpecer el
+     * trabajo del equipo (emulador, devices con root para QA, etc).
+     */
+    private fun initRasp() {
+        val strictMode = BuildConfig.FLAVOR == FLAVOR_PROD
+
+        // Talsec recomienda hardcodear el package name (no usar Context.getPackageName)
+        // porque puede ser manipulado en runtime por un atacante.
+        val expectedPackage = if (strictMode) PROD_PACKAGE_NAME else DEV_PACKAGE_NAME
+
+        // expectedSigningCertificateHashesBase64: se deja vacio mientras no
+        // tengamos el hash SHA-256 del keystore de release. Hasta entonces
+        // freeRASP no validara tamper/repackaging, pero si detecta el resto
+        // de amenazas (Frida, root, debugger, emulator, hooking, etc).
+        RaspManager.init(
+            context = this,
+            packageName = expectedPackage,
+            signingCertHashesBase64 = emptyArray(),
+            strictMode = strictMode,
+        )
+    }
+
+    companion object {
+        private const val FLAVOR_PROD = "prod"
+        // Package names del YAML config: develop=org.openedx.app, prod=mx.aprende.android
+        private const val DEV_PACKAGE_NAME = "org.openedx.app"
+        private const val PROD_PACKAGE_NAME = "mx.aprende.android"
     }
 }

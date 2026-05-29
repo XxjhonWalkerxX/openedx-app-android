@@ -13,6 +13,7 @@ import org.openedx.core.BuildConfig
 import org.openedx.core.config.Config
 import org.openedx.core.data.api.CookiesApi
 import org.openedx.core.data.api.CourseApi
+import org.openedx.core.security.CertificatePinnerProvider
 import org.openedx.discovery.data.api.DiscoveryApi
 import org.openedx.discussion.data.api.DiscussionApi
 import org.openedx.profile.data.api.ProfileApi
@@ -28,6 +29,7 @@ val networkingModule = module {
         OkHttpClient.Builder().apply {
             writeTimeout(60, TimeUnit.SECONDS)
             readTimeout(60, TimeUnit.SECONDS)
+            certificatePinner(CertificatePinnerProvider.build())
             addInterceptor(HeadersInterceptor(get(), get(), get()))
             if (BuildConfig.DEBUG) {
                 addNetworkInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))

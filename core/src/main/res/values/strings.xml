@@ -6,6 +6,7 @@
     <string name="core_error_no_connection">Slow or no internet connection</string>
     <string name="core_error_unknown_error">Something went wrong</string>
     <string name="core_error_try_again">Try again</string>
+    <string name="core_error_compromised_device">Por seguridad, no se permite iniciar sesi&#243;n en dispositivos modificados (root, debug o emulador). Si crees que esto es un error, contacta a soporte.</string>
     <string name="core_privacy_policy">Privacy Policy</string>
     <string name="core_cookie_policy" translatable="false">Cookie policy</string>
     <string name="core_data_sell" translatable="false">Do not sell my personal information</string>

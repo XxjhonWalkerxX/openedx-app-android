@@ -30,6 +30,7 @@ import org.openedx.auth.presentation.sso.OAuthHelper
 import org.openedx.core.Validator
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CalendarPreferences
+import org.openedx.core.security.SecurityState
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.CalendarInteractor
 import org.openedx.core.domain.model.createHonorCodeField
@@ -97,6 +98,23 @@ class SignInViewModel(
         logSignInScreenEvent()
     }
 
+    /**
+     * Capa 3 de defensa contra el hallazgo TICDEFENSE #2: si el dispositivo
+     * esta comprometido (Frida, root, hook, etc) y el modo estricto esta
+     * activo (flavor prod), se bloquea la operacion de login y se muestra
+     * un mensaje al usuario.
+     *
+     * Retorna true si la operacion debe abortarse.
+     */
+    private fun blockedByCompromisedDevice(): Boolean {
+        if (!SecurityState.shouldBlockSensitiveOperations) return false
+        _uiMessage.value = UIMessage.SnackBarMessage(
+            resourceManager.getString(CoreRes.string.core_error_compromised_device)
+        )
+        _uiState.update { it.copy(showProgress = false, loginFailure = true) }
+        return true
+    }
+
     fun processLlaveMxResult(result: LlaveMxAuthResult?) {
         when (result) {
             is LlaveMxAuthResult.Success -> {
@@ -120,6 +138,7 @@ class SignInViewModel(
      * El backend hace el intercambio PKCE con LlaveMX y emite tokens de Open edX.
      */
     private fun signInLlaveMxWithPKCE(code: String, codeVerifier: String) {
+        if (blockedByCompromisedDevice()) return
         _uiState.update { it.copy(showProgress = true) }
         viewModelScope.launch {
             runCatching {
@@ -145,6 +164,7 @@ class SignInViewModel(
     }
 
     fun signInLlaveMx(context: Context) {
+        if (blockedByCompromisedDevice()) return
         logger.d { "Iniciando autenticación con LlaveMX" }
         _uiState.update { it.copy(showProgress = true) }
 
@@ -163,6 +183,7 @@ class SignInViewModel(
 
     fun login(username: String, password: String) {
         logEvent(AuthAnalyticsEvent.USER_SIGN_IN_CLICKED)
+        if (blockedByCompromisedDevice()) return
         if (!validator.isEmailOrUserNameValid(username)) {
             _uiMessage.value =
                 UIMessage.SnackBarMessage(resourceManager.getString(R.string.auth_invalid_email_username))
@@ -221,6 +242,7 @@ class SignInViewModel(
     }
 
     fun socialAuth(fragment: Fragment, authType: AuthType) {
+        if (blockedByCompromisedDevice()) return
         _uiState.update { it.copy(showProgress = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
@@ -234,6 +256,7 @@ class SignInViewModel(
     }
 
     fun signInBrowser(activityContext: Activity) {
+        if (blockedByCompromisedDevice()) return
         _uiState.update { it.copy(showProgress = true) }
         viewModelScope.launch {
             runCatching {
@@ -250,6 +273,7 @@ class SignInViewModel(
     }
 
     fun signInAuthCode(authCode: String) {
+        if (blockedByCompromisedDevice()) return
         _uiState.update { it.copy(showProgress = true) }
         viewModelScope.launch {
             runCatching {

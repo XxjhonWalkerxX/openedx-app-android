@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Capa 1 de defensa contra el hallazgo TICDEFENSE #2 (Bypass SSL Pinning).
+
+  Pinea el SPKI del CA intermediario Google Trust Services WE1 (vigente
+  hasta 2029-02-20) como pin primario y el SPKI del root GTS Root R4
+  (vigente hasta 2028-01-28) como backup catastrofico.
+
+  Cobertura: dev.mexicox.gob.mx y cursos.aprende.gob.mx comparten la
+  misma cadena (Cloudflare Universal SSL via Google Trust Services), asi
+  que un solo pin-set sirve a ambos. files.dev.mexicox.gob.mx se incluye
+  via includeSubdomains.
+
+  expiration: 2028-12-31. Cuando expire, Android desactiva el pinning
+  para evitar brickeo. La capa 2 (OkHttp CertificatePinner) y la capa 3
+  (freeRASP) siguen activas como respaldo.
+
+  cleartextTrafficPermitted=false bloquea todo HTTP no cifrado.
+-->
+<network-security-config>
+
+    <!-- Base config: prohibe HTTP cleartext en toda la app -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Pin-set para dominios del backend Open edX (Cursos @prende.mx) -->
+    <domain-config>
+        <domain includeSubdomains="true">dev.mexicox.gob.mx</domain>
+        <domain includeSubdomains="true">cursos.aprende.gob.mx</domain>
+
+        <pin-set expiration="2028-12-31">
+            <!-- Pin primario: SPKI de Google Trust Services WE1
+                 (CA intermediaria, valida hasta 2029-02-20) -->
+            <pin digest="SHA-256">kIdp6NNEd8wsugYyyIYFsi1ylMCED3hZbSR8ZFsa/A4=</pin>
+
+            <!-- Pin backup: SPKI de GTS Root R4
+                 (Root CA, valida hasta 2028-01-28) -->
+            <pin digest="SHA-256">mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=</pin>
+        </pin-set>
+
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+
+</network-security-config>

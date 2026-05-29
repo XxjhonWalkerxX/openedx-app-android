@@ -117,6 +117,10 @@ dependencies {
     // Zip
     api "net.lingala.zip4j:zip4j:$zip_version"
 
+    // freeRASP (Talsec Community) - Capa 3 defensa SSL pinning (vuln #2 TICDEFENSE)
+    // Detecta Frida, root, hooking, Magisk, emulador, repackaging.
+    api "com.aheaditec.talsec.security:TalsecSecurity-Community:$freerasp_version"
+
     //  OpenEdx libs
     api("com.github.openedx:openedx-app-foundation-android:$openedx_foundation_version")
 

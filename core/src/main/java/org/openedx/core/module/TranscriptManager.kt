@@ -3,6 +3,7 @@ package org.openedx.core.module
 import android.content.Context
 import okhttp3.OkHttpClient
 import org.openedx.core.module.download.AbstractDownloader
+import org.openedx.core.security.CertificatePinnerProvider
 import org.openedx.core.utils.Directories
 import org.openedx.core.utils.IOUtils
 import org.openedx.core.utils.Logger
@@ -26,7 +27,9 @@ class TranscriptManager(
 
     private val transcriptDownloader = object : AbstractDownloader() {
         override val client: OkHttpClient
-            get() = OkHttpClient.Builder().build()
+            get() = OkHttpClient.Builder()
+                .certificatePinner(CertificatePinnerProvider.build())
+                .build()
     }
 
     private var transcriptObject: TimedTextObject? = null
