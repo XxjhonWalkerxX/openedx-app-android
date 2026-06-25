@@ -267,7 +267,7 @@ class EditProfileFragment : Fragment() {
         fos.close()
         return FileProvider.getUriForFile(
             requireContext(),
-            viewModel.config.getAppId() + ".fileprovider",
+            requireContext().packageName + ".fileprovider",
             newFile
         )!!
     }

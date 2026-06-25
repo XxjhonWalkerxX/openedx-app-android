@@ -1,10 +1,15 @@
-API_HOST_URL: 'http://localhost:8000'
-APPLICATION_ID: 'org.openedx.app'
-ENVIRONMENT_DISPLAY_NAME: 'Localhost'
+API_HOST_URL: 'https://cursos.aprende.gob.mx'
+SSO_URL: 'https://cursos.aprende.gob.mx'
+SSO_FINISHED_URL: 'https://cursos.aprende.gob.mx'
+# Debe coincidir con PROD_PACKAGE_NAME de freeRASP (OpenEdXApp): mx.gob.aprende.cursos
+APPLICATION_ID: 'mx.gob.aprende.cursos'
+ENVIRONMENT_DISPLAY_NAME: 'Cursos'
 URI_SCHEME: ''
-FEEDBACK_EMAIL_ADDRESS: 'support@example.com'
+FEEDBACK_EMAIL_ADDRESS: 'soporte@aprende.gob.mx'
 FAQ_URL: ''
-OAUTH_CLIENT_ID: 'OAUTH_CLIENT_ID'
+# TODO REEMPLAZAR: client id de OAuth de PRODUCCION (Django admin de
+# cursos.aprende.gob.mx -> DOT -> Applications). NO es el de dev.
+OAUTH_CLIENT_ID: 'TODO_PROD_OAUTH_CLIENT_ID'
 
 # Keep empty to hide setting
 AGREEMENT_URLS:

@@ -8,8 +8,18 @@
 
   Cobertura: dev.mexicox.gob.mx y cursos.aprende.gob.mx comparten la
   misma cadena (Cloudflare Universal SSL via Google Trust Services), asi
-  que un solo pin-set sirve a ambos. files.dev.mexicox.gob.mx se incluye
-  via includeSubdomains.
+  que un solo pin-set sirve a ambos.
+
+  IMPORTANTE: los hosts de archivos (files.*) NO siempre comparten esa
+  cadena. files.dev.mexicox.gob.mx se sirve directo por Caddy con cert
+  Let's Encrypt (root ISRG), no por Cloudflare. Si se hereda el pin-set de
+  GTS via includeSubdomains, el handshake TLS de las imagenes (fotos de
+  perfil del bucket privado openedxprofiles, imagenes del foro, etc.)
+  falla y Coil no carga nada. Por eso los files.* tienen su propia
+  domain-config (mas especifica -> tiene prioridad sobre includeSubdomains)
+  con un pin-set que acepta AMBAS cadenas: ISRG (Let's Encrypt, camino
+  Caddy directo) y GTS (camino Cloudflare, que prod usa hoy). Asi funciona
+  en staging y prod sin romperse si la infra cambia de edge.
 
   expiration: 2028-12-31. Cuando expire, Android desactiva el pinning
   para evitar brickeo. La capa 2 (OkHttp CertificatePinner) y la capa 3
@@ -38,6 +48,34 @@
 
             <!-- Pin backup: SPKI de GTS Root R4
                  (Root CA, valida hasta 2028-01-28) -->
+            <pin digest="SHA-256">mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=</pin>
+        </pin-set>
+
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+
+    <!-- Pin-set para los hosts de ARCHIVOS (files.*): MinIO/assets servidos
+         por Caddy (Let's Encrypt) en staging y por Cloudflare (GTS) en prod.
+         Mas especifico que el domain-config de arriba, asi que Android usa
+         este para files.* en lugar de heredar los pines de GTS. Acepta ambas
+         cadenas para cubrir los dos edges. -->
+    <domain-config>
+        <domain includeSubdomains="false">files.dev.mexicox.gob.mx</domain>
+        <domain includeSubdomains="false">files.cursos.aprende.gob.mx</domain>
+
+        <pin-set expiration="2027-09-30">
+            <!-- Let's Encrypt (camino Caddy directo): root ISRG Root X1.
+                 Se pinea el ROOT y no la hoja/intermedia porque LE rota los
+                 certs cada ~60 dias; el root es estable por anios. -->
+            <pin digest="SHA-256">C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</pin>
+            <!-- Backup Let's Encrypt: root ISRG Root X2 (cadena ECDSA) -->
+            <pin digest="SHA-256">diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=</pin>
+
+            <!-- Google Trust Services (camino Cloudflare, prod actual):
+                 mismos pines que el host de la API. -->
+            <pin digest="SHA-256">kIdp6NNEd8wsugYyyIYFsi1ylMCED3hZbSR8ZFsa/A4=</pin>
             <pin digest="SHA-256">mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=</pin>
         </pin-set>
 

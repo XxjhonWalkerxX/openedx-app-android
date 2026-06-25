@@ -1,6 +1,8 @@
 package org.openedx.app
 
 import android.app.Application
+import coil.ImageLoader
+import coil.ImageLoaderFactory
 import com.braze.Braze
 import com.braze.configuration.BrazeConfig
 import com.braze.ui.BrazeDeeplinkHandler
@@ -10,6 +12,7 @@ import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.openedx.app.deeplink.BranchBrazeDeeplinkHandler
+import org.openedx.app.image.SignedUrlCacheKeyInterceptor
 import org.openedx.app.di.appModule
 import org.openedx.app.di.networkingModule
 import org.openedx.app.di.screenModule
@@ -17,7 +20,7 @@ import org.openedx.core.config.Config
 import org.openedx.core.security.RaspManager
 import org.openedx.firebase.OEXFirebaseAnalytics
 
-class OpenEdXApp : Application() {
+class OpenEdXApp : Application(), ImageLoaderFactory {
 
     private val config by inject<Config>()
     private val pluginManager by inject<PluginManager>()
@@ -66,6 +69,19 @@ class OpenEdXApp : Application() {
         }
 
         initPlugins()
+    }
+
+    /**
+     * Coil usa este factory para construir su `ImageLoader` singleton (el que
+     * usan todos los `AsyncImage`). Solo añade [SignedUrlCacheKeyInterceptor]
+     * sobre los defaults para que las fotos de perfil prefirmadas (TICDEFENSE
+     * #5) se cacheen por ruta y no por firma. El resto de la configuración queda
+     * por defecto.
+     */
+    override fun newImageLoader(): ImageLoader {
+        return ImageLoader.Builder(this)
+            .components { add(SignedUrlCacheKeyInterceptor()) }
+            .build()
     }
 
     private fun initPlugins() {

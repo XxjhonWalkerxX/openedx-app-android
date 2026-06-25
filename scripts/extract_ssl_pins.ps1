@@ -14,7 +14,16 @@
 # =============================================================================
 
 $openssl = "C:\Program Files\Git\usr\bin\openssl.exe"
-$domains = @("dev.mexicox.gob.mx", "cursos.aprende.gob.mx")
+# Hosts de la API (Cloudflare / Google Trust Services) y de archivos
+# (files.* = Caddy/MinIO; staging usa Let's Encrypt, prod hoy usa GTS).
+# Verifica que la cadena de los files.* termine en ISRG Root X1/X2 (LE) o en
+# GTS WE1/R4 -> esos pines viven en network_security_config.xml.
+$domains = @(
+    "dev.mexicox.gob.mx",
+    "cursos.aprende.gob.mx",
+    "files.dev.mexicox.gob.mx",
+    "files.cursos.aprende.gob.mx"
+)
 $outDir  = "$PSScriptRoot\..\ssl_pins_output"
 
 if (-not (Test-Path $outDir)) {
